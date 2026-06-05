@@ -1,0 +1,21 @@
+# Dependencias Node (solo usadas para import-excel.js, no para el sitio)
+node_modules/
+package-lock.json
+
+# Archivo Excel original (datos sensibles, no va al repo público)
+*.xlsx
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor / IDE
+.claude/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*

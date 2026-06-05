@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#1c1e22">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Vinos — Grandbar</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ── HEADER FIJO ── -->
+<header class="page-header">
+
+  <div class="header-top">
+    <button class="back-btn" onclick="history.back()" aria-label="Volver">‹</button>
+
+    <div class="header-title">
+      <div class="header-sector">Vinos</div>
+      <div class="header-user">Lucas Porro</div>
+    </div>
+
+    <div class="header-date">
+      <div class="date-display" id="fecha-display"></div>
+      <input type="date" id="fecha-conteo" class="date-input" aria-label="Fecha del conteo">
+    </div>
+  </div>
+
+  <!-- Buscador -->
+  <div class="search-wrap">
+    <span class="search-icon" aria-hidden="true">⌕</span>
+    <input
+      type="search"
+      id="buscador"
+      class="search-input"
+      placeholder="Buscar artículo, proveedor o SKU…"
+      autocomplete="off"
+      autocorrect="off"
+      autocapitalize="none"
+      spellcheck="false"
+    >
+    <div class="search-spinner" id="search-spinner" aria-hidden="true"></div>
+    <button class="search-clear" id="search-clear" aria-label="Limpiar búsqueda">✕</button>
+  </div>
+
+  <!-- Progreso -->
+  <div class="progress-row" aria-live="polite">
+    <span class="progress-label">
+      <strong id="count-filled">0</strong> / <span id="count-total">—</span> completados
+    </span>
+    <span class="progress-pct" id="progress-pct">0%</span>
+  </div>
+  <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+    <div class="progress-fill" id="progress-fill"></div>
+  </div>
+
+  <div class="search-meta" id="search-meta" aria-live="polite"></div>
+
+</header>
+
+<!-- ── LISTA ── -->
+<main>
+  <div id="product-list" role="list" aria-label="Productos de Vinos"></div>
+</main>
+
+<!-- ── FOOTER ── -->
+<footer class="sticky-footer">
+  <div class="footer-inner">
+    <button id="btn-enviar" class="btn-enviar" disabled aria-disabled="true">
+      Enviar conteo
+    </button>
+  </div>
+</footer>
+
+<!-- Toast -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="productos.js"></script>
+<script src="app.js"></script>
+<script>
+  initEmailJS();
+  initConteoForm({
+    sector:    'vinos',
+    usuario:   'Lucas Porro',
+    productos: PRODUCTOS_VINOS,
+  });
+</script>
+</body>
+</html>

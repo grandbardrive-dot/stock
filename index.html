@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#111214">
+  <title>Grandbar — Inventario</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* login-only tweaks */
+    .divider {
+      width: 100%;
+      max-width: 340px;
+      text-align: center;
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+
+<div class="login-wrap">
+
+  <div class="login-logo">
+    <span class="logo-tag">Control de stock</span>
+    <h1>Grandbar</h1>
+    <p class="subtitle">Inventario diario</p>
+  </div>
+
+  <span class="date-chip" id="date-label">—</span>
+
+  <div class="divider">Seleccioná tu usuario</div>
+
+  <div class="user-cards">
+
+    <a href="vinos.html" class="user-card">
+      <div class="avatar avatar-wine">LP</div>
+      <div class="info">
+        <div class="name">Lucas Porro</div>
+        <div class="sector">Vinos</div>
+      </div>
+      <span class="arrow">›</span>
+    </a>
+
+    <a href="spirits.html" class="user-card">
+      <div class="avatar avatar-spirit">LB</div>
+      <div class="info">
+        <div class="name">Lucas Buenanueva</div>
+        <div class="sector">Spirits &amp; Gaseosas</div>
+      </div>
+      <span class="arrow">›</span>
+    </a>
+
+  </div>
+
+</div>
+
+<script src="app.js"></script>
+<script>
+  renderDate('date-label');
+</script>
+</body>
+</html>
