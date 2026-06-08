@@ -376,14 +376,14 @@ function initConteoForm({ sector, usuario, productos, proveedores }) {
     );
 
     // 3. promoMap resultante
-    const promoEntries = Object.entries(promoMap);
-    const conStock     = promoEntries.filter(([, v]) => v > 0);
-    console.log('3. promoMap — total entradas:', promoEntries.length, '| con stock > 0:', conStock.length);
+    const dbgPromoEntries = Object.entries(promoMap);
+    const dbgConStock     = dbgPromoEntries.filter(([, v]) => v > 0);
+    console.log('3. promoMap — total entradas:', dbgPromoEntries.length, '| con stock > 0:', dbgConStock.length);
     console.log('   "Alfa Crux Corte Uco x 750ml" en promoMap:',
       promoMap['Alfa Crux Corte Uco x 750ml'] ?? 'AUSENTE'
     );
-    if (conStock.length > 0) {
-      console.log('   Primeros 5 con stock > 0:', conStock.slice(0, 5));
+    if (dbgConStock.length > 0) {
+      console.log('   Primeros 5 con stock > 0:', dbgConStock.slice(0, 5));
     }
 
     console.groupEnd();
