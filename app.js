@@ -7,6 +7,7 @@ const RESEND_TO      = [
   'facturacion@grandbar.com.ar',
   'lgonzalez@grandbar.com.ar',
   'compras@grandbar.com.ar',
+  'jlemos@grandbar.com.ar',
 ];
 
 // ── renderDate ────────────────────────────────────────────────
