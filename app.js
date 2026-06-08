@@ -48,6 +48,21 @@ function initConteoForm({ sector, usuario, productos, proveedores }) {
   let values = {};
   let query  = '';
 
+  // ── Fecha de última actualización del stock sistema ──
+  const stockFechaEl = document.getElementById('stock-update-date');
+  if (stockFechaEl) {
+    const stockFecha = localStorage.getItem('grandbar_stock_sistema_fecha');
+    if (stockFecha) {
+      const d = new Date(stockFecha);
+      const str = d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      stockFechaEl.textContent = `Stock sistema: ${str}`;
+      stockFechaEl.style.display = 'block';
+    } else {
+      stockFechaEl.textContent = 'Stock sistema: original';
+      stockFechaEl.style.display = 'block';
+    }
+  }
+
   // ── Proveedores seleccionados: mostrar en header ──
   const provEl = document.getElementById('header-proveedores');
   if (provEl && proveedores && proveedores.length) {
@@ -325,6 +340,9 @@ function initConteoForm({ sector, usuario, productos, proveedores }) {
     const sectorLabel = sector === 'vinos' ? 'Vinos' : 'Spirits y Gaseosas';
     const sectorSlug  = sector === 'vinos' ? 'vinos' : 'spirits';
 
+    // Overrides de stock sistema cargados desde Córdoba Software
+    const stockOverrides = JSON.parse(localStorage.getItem('grandbar_stock_sistema') || '{}');
+
     // Construir lista completa (productos tocados, con totales)
     const conStock = productos
       .map(p => {
@@ -337,7 +355,7 @@ function initConteoForm({ sector, usuario, productos, proveedores }) {
           sku:           p.sku,
           proveedor:     p.proveedor,
           articulo:      p.articulo,
-          stock_sistema: p.stock_sistema || 0,
+          stock_sistema: (stockOverrides[p.sku] !== undefined ? stockOverrides[p.sku] : p.stock_sistema) || 0,
           depo1, local, depo2, total,
           obs: v.obs || '',
         };

@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0a0a0a">
+  <title>Admin — Grandbar Stock</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&family=Barlow+Condensed:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ── Admin-specific styles ── */
+    .admin-wrap {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 1.25rem 1rem 4rem;
+    }
+
+    .admin-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .admin-section-title {
+      font-family: var(--font-serif);
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--gold);
+      letter-spacing: 0.02em;
+      margin-bottom: 0.35rem;
+    }
+
+    .admin-section-desc {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 1rem;
+      line-height: 1.5;
+    }
+
+    /* Estado actual */
+    .estado-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.6rem 0.75rem;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 1rem;
+    }
+
+    .estado-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      background: var(--muted);
+    }
+    .estado-dot.ok  { background: var(--success); }
+    .estado-dot.old { background: var(--gold); }
+
+    .estado-texto {
+      flex: 1;
+      font-size: 0.82rem;
+      color: var(--cream-dim);
+    }
+
+    .estado-texto strong { color: var(--cream); }
+
+    /* Zona de subida */
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 2rem 1rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      position: relative;
+    }
+
+    .upload-zone:hover,
+    .upload-zone.drag-over {
+      border-color: var(--gold);
+      background: rgba(203,168,106,0.05);
+    }
+
+    .upload-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    .upload-icon {
+      font-size: 2.2rem;
+      margin-bottom: 0.5rem;
+      line-height: 1;
+    }
+
+    .upload-label {
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: var(--cream);
+      margin-bottom: 0.3rem;
+    }
+
+    .upload-sublabel {
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+
+    /* Barra de progreso de parsing */
+    .parse-progress {
+      display: none;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.6rem 0;
+    }
+
+    .parse-progress .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid var(--border);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      flex-shrink: 0;
+    }
+
+    .parse-progress span {
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    /* Resultado del parse */
+    .resultado {
+      display: none;
+      margin-top: 1rem;
+    }
+
+    .resultado-header {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 0.85rem;
+    }
+
+    .resultado-icon { font-size: 1.4rem; line-height: 1; }
+
+    .resultado-titulo {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--cream);
+    }
+
+    .resultado-subtitulo {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 0.1rem;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.6rem;
+      margin-bottom: 0.85rem;
+    }
+
+    .stat-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.65rem 0.85rem;
+    }
+
+    .stat-num {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--gold);
+      font-variant-numeric: tabular-nums;
+      line-height: 1.1;
+    }
+
+    .stat-label {
+      font-size: 0.65rem;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-top: 0.15rem;
+    }
+
+    .stat-card.warn .stat-num { color: var(--cream-dim); }
+
+    /* Lista de SKUs no encontrados (colapsable) */
+    .no-encontrados-toggle {
+      font-size: 0.75rem;
+      color: var(--muted);
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      margin-bottom: 0.6rem;
+      display: inline-block;
+    }
+
+    .no-encontrados-list {
+      display: none;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.6rem 0.75rem;
+      font-size: 0.72rem;
+      color: var(--muted);
+      font-family: 'Courier New', monospace;
+      max-height: 150px;
+      overflow-y: auto;
+      margin-bottom: 0.75rem;
+      line-height: 1.8;
+    }
+
+    /* Botones admin */
+    .btn-admin {
+      border: none;
+      border-radius: var(--radius);
+      font-family: var(--font);
+      font-size: 0.88rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 0.75rem 1.25rem;
+      cursor: pointer;
+      transition: background 0.15s, opacity 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .btn-admin-primary {
+      background: var(--gold);
+      color: var(--blue-dark);
+      width: 100%;
+    }
+
+    .btn-admin-primary:active { background: var(--gold-dim); }
+
+    .btn-admin-ghost {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      width: 100%;
+      margin-top: 0.5rem;
+    }
+
+    .btn-admin-ghost:hover { border-color: var(--gold); color: var(--gold); }
+
+    .btn-admin-danger {
+      background: none;
+      border: 1px solid var(--danger);
+      color: var(--danger);
+      width: 100%;
+    }
+
+    .btn-admin-danger:active { background: rgba(192,57,43,0.15); }
+
+    /* Separador */
+    .admin-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 1.5rem 0;
+    }
+
+    /* Info box */
+    .info-box {
+      background: rgba(31,68,127,0.2);
+      border: 1px solid rgba(31,68,127,0.5);
+      border-radius: var(--radius);
+      padding: 0.65rem 0.85rem;
+      font-size: 0.78rem;
+      color: var(--cream-dim);
+      line-height: 1.55;
+    }
+
+    .info-box strong { color: var(--cream); }
+
+    @media (min-width: 540px) {
+      .admin-wrap { padding-left: max(1rem, calc(50vw - 300px)); padding-right: max(1rem, calc(50vw - 300px)); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="page-header">
+  <div class="header-top">
+    <button class="back-btn" onclick="location.href='index.html'" aria-label="Volver">‹</button>
+    <div class="header-title">
+      <div class="header-sector">Administración</div>
+      <div class="header-user">Grandbar Stock</div>
+    </div>
+  </div>
+</header>
+
+<div class="admin-wrap">
+
+  <!-- ══ SECCIÓN: Actualizar Stock Sistema ══ -->
+  <div class="admin-section">
+    <div class="admin-section-title">Actualizar Stock Sistema</div>
+    <div class="admin-section-desc">
+      Subí el archivo exportado de Córdoba Software para actualizar
+      los valores de "Stock Sistema" que aparecen en el Excel de conteo.
+    </div>
+
+    <!-- Estado actual -->
+    <div class="estado-row" id="estado-row">
+      <div class="estado-dot" id="estado-dot"></div>
+      <div class="estado-texto" id="estado-texto">Cargando estado...</div>
+    </div>
+
+    <!-- Info de formato -->
+    <div class="info-box" style="margin-bottom: 1rem;">
+      <strong>Formato esperado:</strong> Listado de Stock Básico exportado de Córdoba Software.<br>
+      Columnas: <strong>Artículo Código</strong> (col A) · <strong>Unidades Stock</strong> (col C).<br>
+      Los datos empiezan en la fila 5 (las filas 1-4 son títulos/encabezados).
+    </div>
+
+    <!-- Zona de upload -->
+    <div class="upload-zone" id="upload-zone">
+      <input type="file" id="file-input" accept=".xlsx,.xls" aria-label="Seleccionar archivo Excel de Córdoba Software">
+      <div class="upload-icon">📂</div>
+      <div class="upload-label">Seleccionar o arrastrar archivo Excel</div>
+      <div class="upload-sublabel" id="upload-sublabel">Listado de Stock Básico (.xlsx)</div>
+    </div>
+
+    <!-- Progreso de parsing -->
+    <div class="parse-progress" id="parse-progress">
+      <div class="spinner"></div>
+      <span id="parse-msg">Leyendo archivo...</span>
+    </div>
+
+    <!-- Resultado -->
+    <div class="resultado" id="resultado">
+      <div class="resultado-header">
+        <div class="resultado-icon" id="res-icon">✅</div>
+        <div>
+          <div class="resultado-titulo" id="res-titulo">Stock actualizado</div>
+          <div class="resultado-subtitulo" id="res-subtitulo"></div>
+        </div>
+      </div>
+
+      <div class="stat-grid" id="stat-grid">
+        <!-- se llena dinámicamente -->
+      </div>
+
+      <div id="no-enc-wrap" style="display:none">
+        <span class="no-encontrados-toggle" id="no-enc-toggle">Ver SKUs no encontrados ▼</span>
+        <div class="no-encontrados-list" id="no-enc-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SECCIÓN: Resetear stock ══ -->
+  <div class="admin-section">
+    <div class="admin-section-title">Resetear Stock Sistema</div>
+    <div class="admin-section-desc">
+      Elimina los valores cargados desde Córdoba Software y vuelve
+      a los valores originales del archivo Excel de stock.
+    </div>
+    <button class="btn-admin btn-admin-danger" id="btn-reset">
+      Resetear al stock original
+    </button>
+  </div>
+
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast" role="status"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+<script src="productos.js"></script>
+<script src="app.js"></script>
+<script>
+(function () {
+  // ── Claves de localStorage ──────────────────────────────────
+  const LS_STOCK    = 'grandbar_stock_sistema';
+  const LS_FECHA    = 'grandbar_stock_sistema_fecha';
+  const LS_ARCHIVO  = 'grandbar_stock_sistema_archivo';
+
+  // ── Elementos ──────────────────────────────────────────────
+  const estadoRow    = document.getElementById('estado-row');
+  const estadoDot    = document.getElementById('estado-dot');
+  const estadoTexto  = document.getElementById('estado-texto');
+  const uploadZone   = document.getElementById('upload-zone');
+  const fileInput    = document.getElementById('file-input');
+  const uploadSubl   = document.getElementById('upload-sublabel');
+  const parseProgress = document.getElementById('parse-progress');
+  const parseMsg     = document.getElementById('parse-msg');
+  const resultadoEl  = document.getElementById('resultado');
+  const resIcon      = document.getElementById('res-icon');
+  const resTitulo    = document.getElementById('res-titulo');
+  const resSubtitulo = document.getElementById('res-subtitulo');
+  const statGrid     = document.getElementById('stat-grid');
+  const noEncWrap    = document.getElementById('no-enc-wrap');
+  const noEncToggle  = document.getElementById('no-enc-toggle');
+  const noEncList    = document.getElementById('no-enc-list');
+  const btnReset     = document.getElementById('btn-reset');
+
+  // ── Construir índice de SKUs conocidos ─────────────────────
+  const skuIndex = {};
+  PRODUCTOS_VINOS.forEach(p => { skuIndex[p.sku] = 'vinos'; });
+  PRODUCTOS_SPIRITS.forEach(p => { skuIndex[p.sku] = 'spirits'; });
+
+  // ── Mostrar estado actual ──────────────────────────────────
+  function renderEstado() {
+    const fecha   = localStorage.getItem(LS_FECHA);
+    const archivo = localStorage.getItem(LS_ARCHIVO);
+
+    if (!fecha) {
+      estadoDot.className  = 'estado-dot';
+      estadoTexto.innerHTML = 'Stock Sistema <strong>no actualizado</strong> — se usan los valores del archivo original.';
+      return;
+    }
+
+    const d      = new Date(fecha);
+    const ahora  = new Date();
+    const diasDiff = Math.floor((ahora - d) / (1000 * 60 * 60 * 24));
+    const fechaStr = d.toLocaleString('es-AR', {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    });
+
+    const overrides = JSON.parse(localStorage.getItem(LS_STOCK) || '{}');
+    const total = Object.keys(overrides).length;
+
+    if (diasDiff <= 7) {
+      estadoDot.className = 'estado-dot ok';
+    } else {
+      estadoDot.className = 'estado-dot old';
+    }
+
+    estadoTexto.innerHTML =
+      `Última actualización: <strong>${fechaStr}</strong><br>` +
+      `${total.toLocaleString()} productos actualizados` +
+      (archivo ? ` · <em>${archivo}</em>` : '');
+  }
+
+  renderEstado();
+
+  // ── Drag & drop ────────────────────────────────────────────
+  uploadZone.addEventListener('dragover', e => {
+    e.preventDefault();
+    uploadZone.classList.add('drag-over');
+  });
+
+  ['dragleave', 'dragend'].forEach(ev =>
+    uploadZone.addEventListener(ev, () => uploadZone.classList.remove('drag-over'))
+  );
+
+  uploadZone.addEventListener('drop', e => {
+    e.preventDefault();
+    uploadZone.classList.remove('drag-over');
+    const file = e.dataTransfer?.files?.[0];
+    if (file) procesarArchivo(file);
+  });
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    if (file) procesarArchivo(file);
+    fileInput.value = ''; // reset para permitir re-subir el mismo archivo
+  });
+
+  // ── Procesar archivo Excel ─────────────────────────────────
+  function procesarArchivo(file) {
+    uploadSubl.textContent    = file.name;
+    resultadoEl.style.display = 'none';
+    parseProgress.style.display = 'flex';
+    parseMsg.textContent      = 'Leyendo archivo...';
+
+    const reader = new FileReader();
+
+    reader.onload = function (e) {
+      try {
+        parseMsg.textContent = 'Procesando filas...';
+
+        const wb   = XLSX.read(e.target.result, { type: 'array' });
+        const ws   = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+
+        // Detectar fila de datos:
+        // Las filas 1-4 son título/depósito/headers, datos desde fila 5 (índice 4)
+        // Robustez: buscar la primera fila donde col[0] tiene 8 dígitos
+        let startRow = 4; // default
+        for (let i = 0; i < Math.min(10, rows.length); i++) {
+          if (/^\d{8}\s*$/.test(String(rows[i][0]))) { startRow = i; break; }
+        }
+
+        parseMsg.textContent = 'Cruzando SKUs...';
+
+        const nuevosStocks = {};
+        const noEncontrados = [];
+        let totalFilaValidas = 0;
+        let matchVinos   = 0;
+        let matchSpirits = 0;
+
+        rows.slice(startRow).forEach(row => {
+          const skuRaw = String(row[0]).trim();
+          if (!/^\d{8}$/.test(skuRaw)) return; // saltar filas sin SKU válido
+
+          totalFilaValidas++;
+          const stock = Number(row[2]) || 0;
+
+          if (skuIndex[skuRaw] === 'vinos') {
+            nuevosStocks[skuRaw] = stock;
+            matchVinos++;
+          } else if (skuIndex[skuRaw] === 'spirits') {
+            nuevosStocks[skuRaw] = stock;
+            matchSpirits++;
+          } else {
+            noEncontrados.push(skuRaw);
+          }
+        });
+
+        parseProgress.style.display = 'none';
+
+        // Guardar en localStorage
+        const ahora = new Date().toISOString();
+        localStorage.setItem(LS_STOCK,   JSON.stringify(nuevosStocks));
+        localStorage.setItem(LS_FECHA,   ahora);
+        localStorage.setItem(LS_ARCHIVO, file.name);
+
+        renderEstado();
+        mostrarResultado(file.name, totalFilaValidas, matchVinos, matchSpirits, noEncontrados);
+
+      } catch (err) {
+        parseProgress.style.display = 'none';
+        console.error('Error al parsear Excel:', err);
+        showToast('Error al leer el archivo: ' + err.message, false);
+      }
+    };
+
+    reader.onerror = () => {
+      parseProgress.style.display = 'none';
+      showToast('No se pudo leer el archivo', false);
+    };
+
+    reader.readAsArrayBuffer(file);
+  }
+
+  // ── Mostrar resultado ──────────────────────────────────────
+  function mostrarResultado(nombre, total, vinos, spirits, noEnc) {
+    const actualizados = vinos + spirits;
+    const pct = total > 0 ? Math.round(actualizados / total * 100) : 0;
+
+    resIcon.textContent    = actualizados > 0 ? '✅' : '⚠️';
+    resTitulo.textContent  = actualizados > 0
+      ? `${actualizados.toLocaleString()} productos actualizados`
+      : 'Sin coincidencias encontradas';
+    resSubtitulo.textContent = `${pct}% de las ${total.toLocaleString()} filas del archivo`;
+
+    statGrid.innerHTML = `
+      <div class="stat-card">
+        <div class="stat-num">${vinos.toLocaleString()}</div>
+        <div class="stat-label">Vinos actualizados</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">${spirits.toLocaleString()}</div>
+        <div class="stat-label">Spirits actualizados</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">${total.toLocaleString()}</div>
+        <div class="stat-label">Filas en el archivo</div>
+      </div>
+      <div class="stat-card warn">
+        <div class="stat-num">${noEnc.length.toLocaleString()}</div>
+        <div class="stat-label">SKUs no encontrados</div>
+      </div>`;
+
+    if (noEnc.length > 0) {
+      noEncWrap.style.display = 'block';
+      noEncList.textContent   = noEnc.join('  ·  ');
+      noEncToggle.textContent = `Ver SKUs no encontrados (${noEnc.length}) ▼`;
+    } else {
+      noEncWrap.style.display = 'none';
+    }
+
+    resultadoEl.style.display = 'block';
+    showToast(`Stock actualizado — ${actualizados.toLocaleString()} productos`);
+  }
+
+  // ── Toggle SKUs no encontrados ─────────────────────────────
+  noEncToggle.addEventListener('click', () => {
+    const visible = noEncList.style.display === 'block';
+    noEncList.style.display = visible ? 'none' : 'block';
+    noEncToggle.textContent = noEncToggle.textContent
+      .replace(visible ? '▲' : '▼', visible ? '▼' : '▲');
+  });
+
+  // ── Resetear ───────────────────────────────────────────────
+  btnReset.addEventListener('click', () => {
+    if (!confirm('¿Resetear el stock sistema a los valores originales?\nEsto elimina la actualización cargada desde Córdoba Software.')) return;
+    localStorage.removeItem(LS_STOCK);
+    localStorage.removeItem(LS_FECHA);
+    localStorage.removeItem(LS_ARCHIVO);
+    resultadoEl.style.display = 'none';
+    uploadSubl.textContent    = 'Listado de Stock Básico (.xlsx)';
+    renderEstado();
+    showToast('Stock reseteado a valores originales');
+  });
+
+})();
+</script>
+</body>
+</html>
