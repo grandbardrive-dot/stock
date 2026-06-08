@@ -4,10 +4,8 @@
 
 const RESEND_FROM = 'Stock GrandBar <onboarding@resend.dev>';
 const RESEND_TO   = [
-  'facturacion@grandbar.com.ar',
-  'lgonzalez@grandbar.com.ar',
-  'compras@grandbar.com.ar',
   'jlemos@grandbar.com.ar',
+  'compras@grandbar.com.ar',
 ];
 
 exports.handler = async function (event) {
