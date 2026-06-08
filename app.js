@@ -1,13 +1,13 @@
 /* ── GRANDBAR STOCK — shared logic ── */
 
-// ── EmailJS ───────────────────────────────────────────────────
-const EMAILJS_SERVICE  = 'service_1ga5mth';
-const EMAILJS_TEMPLATE = 'template_kemu27e';
-const EMAILJS_KEY      = 'hdX7XzU49ot6eU0ca';
-
-function initEmailJS() {
-  if (typeof emailjs !== 'undefined') emailjs.init({ publicKey: EMAILJS_KEY });
-}
+// ── Resend ────────────────────────────────────────────────────
+const RESEND_API_KEY = 're_xxxxxxxxx'; // REEMPLAZAR con tu API key de Resend
+const RESEND_FROM    = 'Stock GrandBar <onboarding@resend.dev>';
+const RESEND_TO      = [
+  'facturacion@grandbar.com.ar',
+  'lgonzalez@grandbar.com.ar',
+  'compras@grandbar.com.ar',
+];
 
 // ── renderDate ────────────────────────────────────────────────
 function renderDate(elId) {
@@ -422,6 +422,8 @@ function initConteoForm({ sector, usuario, productos, proveedores }) {
     }
 
     // ── Generar Excel ──
+    let base64Excel   = null;
+    let nombreArchivo = null;
     try {
       const wb = XLSX.utils.book_new();
 
@@ -496,29 +498,145 @@ function initConteoForm({ sector, usuario, productos, proveedores }) {
       });
 
       XLSX.utils.book_append_sheet(wb, ws, 'Stock');
-      XLSX.writeFile(wb, `stock_${sectorSlug}_${fecha}.xlsx`);
+
+      // Convertir a base64 para adjuntar (no descarga)
+      base64Excel   = XLSX.write(wb, { bookType: 'xlsx', type: 'base64' });
+      nombreArchivo = `stock_${sectorSlug}_${fecha}.xlsx`;
+
     } catch (e) {
       console.error('Excel error:', e);
     }
 
-    // ── Enviar email ──
+    // ── Construir HTML del email ──
+    const filasTbody = conStock.map(p => {
+      const diff     = p.total - (p.stock_sistema + p.promo);
+      const diffColor = diff < 0 ? '#C0392B' : diff > 0 ? '#2E8B57' : '#8a8f9a';
+      const obsCell  = p.obs ? `<em style="color:#8a8f9a">${p.obs}</em>` : '';
+      return `<tr>
+        <td style="font-family:monospace;font-size:12px;color:#8a8f9a">${p.sku}</td>
+        <td>${p.articulo}${obsCell ? '<br>' + obsCell : ''}</td>
+        <td style="text-align:center">${p.stock_sistema + p.promo}</td>
+        <td style="text-align:center;color:#8a8f9a">${p.promo || ''}</td>
+        <td style="text-align:center">${p.depo1 || ''}</td>
+        <td style="text-align:center">${p.local || ''}</td>
+        <td style="text-align:center">${p.depo2 || ''}</td>
+        <td style="text-align:center;font-weight:700">${p.total}</td>
+        <td style="text-align:center;font-weight:700;color:${diffColor}">${diff > 0 ? '+' : ''}${diff}</td>
+      </tr>`;
+    }).join('');
+
+    const cuerpoHtml = `
+<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body
+  style="margin:0;padding:0;background:#f5f5f5;font-family:'Segoe UI',Arial,sans-serif">
+<div style="max-width:900px;margin:24px auto;background:#fff;border-radius:8px;
+            overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.1)">
+
+  <div style="background:#1F447F;padding:20px 28px">
+    <div style="color:#CBA86A;font-size:11px;letter-spacing:2px;text-transform:uppercase;
+                margin-bottom:4px">Control de Stock</div>
+    <div style="color:#F1EBD6;font-size:22px;font-weight:700">
+      ${sectorLabel} — ${fecha}
+    </div>
+    <div style="color:#a0b8d8;font-size:13px;margin-top:6px">
+      ${usuario} &nbsp;·&nbsp; ${provLine}
+    </div>
+  </div>
+
+  <div style="padding:20px 28px;background:#f9f7f2;border-bottom:1px solid #e8e0cc;
+              display:flex;gap:32px;flex-wrap:wrap">
+    <div>
+      <div style="font-size:11px;color:#8a8f9a;text-transform:uppercase;
+                  letter-spacing:1px">Productos con stock</div>
+      <div style="font-size:28px;font-weight:800;color:#1F447F">${conStock.length}</div>
+      <div style="font-size:11px;color:#aaa">de ${productos.length} totales</div>
+    </div>
+    <div>
+      <div style="font-size:11px;color:#8a8f9a;text-transform:uppercase;
+                  letter-spacing:1px">Total unidades</div>
+      <div style="font-size:28px;font-weight:800;color:#CBA86A">${totUnidades}</div>
+    </div>
+  </div>
+
+  <div style="padding:20px 28px;overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;font-size:13px">
+      <thead>
+        <tr style="background:#1F447F;color:#F1EBD6">
+          <th style="padding:8px 10px;text-align:left">SKU</th>
+          <th style="padding:8px 10px;text-align:left">Descripción</th>
+          <th style="padding:8px 10px;text-align:center">Stock<br>Sistema</th>
+          <th style="padding:8px 10px;text-align:center">Promo</th>
+          <th style="padding:8px 10px;text-align:center">Depo 1</th>
+          <th style="padding:8px 10px;text-align:center">Local</th>
+          <th style="padding:8px 10px;text-align:center">Depo 2</th>
+          <th style="padding:8px 10px;text-align:center">Total</th>
+          <th style="padding:8px 10px;text-align:center">Dif.</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${filasTbody}
+      </tbody>
+    </table>
+  </div>
+
+  <div style="padding:16px 28px;background:#f9f7f2;font-size:11px;color:#aaa;
+              border-top:1px solid #eee;text-align:center">
+    Generado por GrandBar Stock · ${new Date().toLocaleString('es-AR')}
+  </div>
+</div>
+</body></html>`;
+
+    // ── Enviar con Resend ──
     btnEnviar.disabled = true;
     btnEnviar.textContent = 'Enviando…';
 
     try {
-      await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, {
-        sector:  sectorLabel,
-        fecha,
-        name:    usuario,
-        message,
+      const payload = {
+        from:    RESEND_FROM,
+        to:      RESEND_TO,
+        subject: `[Stock Grand Bar] ${sectorLabel} — ${fecha}`,
+        html:    cuerpoHtml,
+      };
+
+      if (base64Excel && nombreArchivo) {
+        payload.attachments = [{ filename: nombreArchivo, content: base64Excel }];
+      }
+
+      const res = await fetch('https://api.resend.com/emails', {
+        method:  'POST',
+        headers: {
+          'Authorization': `Bearer ${RESEND_API_KEY}`,
+          'Content-Type':  'application/json',
+        },
+        body: JSON.stringify(payload),
       });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || `HTTP ${res.status}`);
+      }
+
       values = {};
       renderList();
       updateProgress();
       showToast('Conteo enviado por email ✓');
+
     } catch (err) {
-      console.error('EmailJS error:', err);
+      console.error('Resend error:', err);
       showToast('No se pudo enviar el email — conteo guardado localmente', false);
+
+      // Descarga de respaldo si el email falló
+      if (base64Excel && nombreArchivo) {
+        try {
+          const bytes  = atob(base64Excel);
+          const arr    = new Uint8Array(bytes.length);
+          for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
+          const blob   = new Blob([arr], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+          const url    = URL.createObjectURL(blob);
+          const a      = document.createElement('a');
+          a.href = url; a.download = nombreArchivo; a.click();
+          URL.revokeObjectURL(url);
+        } catch {}
+      }
     } finally {
       btnEnviar.disabled = false;
       btnEnviar.textContent = 'Enviar conteo';
