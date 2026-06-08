@@ -1,14 +1,8 @@
 /* ── GRANDBAR STOCK — shared logic ── */
 
-// ── Resend ────────────────────────────────────────────────────
-const RESEND_API_KEY = 're_RPxitaUb_nvqgCtJLTeVHdGtqufVPmqvn';
-const RESEND_FROM    = 'Stock GrandBar <onboarding@resend.dev>';
-const RESEND_TO      = [
-  'facturacion@grandbar.com.ar',
-  'lgonzalez@grandbar.com.ar',
-  'compras@grandbar.com.ar',
-  'jlemos@grandbar.com.ar',
-];
+// ── Email — el envío pasa por la Netlify Function ─────────────
+// La API key y los destinatarios viven en netlify/functions/send-email.js
+// (API key como variable de entorno en Netlify, nunca en este archivo)
 
 // ── renderDate ────────────────────────────────────────────────
 function renderDate(elId) {
@@ -591,24 +585,15 @@ function initConteoForm({ sector, usuario, productos, proveedores }) {
     btnEnviar.textContent = 'Enviando…';
 
     try {
-      const payload = {
-        from:    RESEND_FROM,
-        to:      RESEND_TO,
-        subject: `[Stock Grand Bar] ${sectorLabel} — ${fecha}`,
-        html:    cuerpoHtml,
-      };
-
-      if (base64Excel && nombreArchivo) {
-        payload.attachments = [{ filename: nombreArchivo, content: base64Excel }];
-      }
-
-      const res = await fetch('https://api.resend.com/emails', {
+      const res = await fetch('/.netlify/functions/send-email', {
         method:  'POST',
-        headers: {
-          'Authorization': `Bearer ${RESEND_API_KEY}`,
-          'Content-Type':  'application/json',
-        },
-        body: JSON.stringify(payload),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subject:     `[Stock Grand Bar] ${sectorLabel} — ${fecha}`,
+          html:        cuerpoHtml,
+          filename:    nombreArchivo  || null,
+          base64Excel: base64Excel    || null,
+        }),
       });
 
       if (!res.ok) {

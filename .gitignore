@@ -22,3 +22,7 @@ npm-debug.log*
 
 # Logos originales con espacios (usar logo.png)
 GrandBar logotipo*
+
+# Variables de entorno — la API key real nunca va al repo
+.env
+.env.local
