@@ -431,13 +431,13 @@ function initConteoForm({ sector, usuario, productos, proveedores }) {
       const dataRows = conStock.map(p => [
         p.sku,
         p.articulo,
-        p.stock_sistema,
-        p.promo,
+        p.stock_sistema + p.promo,   // Stock Sistema = producto + promo combinados
+        p.promo,                      // Promo = desglose de cuánto es promo dentro del total
         p.depo1,
         p.local,
         p.depo2,
         p.total,
-        p.total - (p.stock_sistema + p.promo),
+        p.total - (p.stock_sistema + p.promo),  // Diferencia = Total - Stock Sistema combinado
       ]);
 
       const provResumen = proveedores && proveedores.length
