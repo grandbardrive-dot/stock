@@ -10,7 +10,6 @@ function initEmailJS() {
 }
 
 // ── renderDate ────────────────────────────────────────────────
-// Usado por index.html para mostrar la fecha actual
 function renderDate(elId) {
   const el = document.getElementById(elId);
   if (!el) return;
@@ -23,16 +22,14 @@ function renderDate(elId) {
 function showToast(msg, ok = true) {
   let t = document.getElementById('toast');
   if (!t) { t = document.createElement('div'); t.id = 'toast'; document.body.appendChild(t); }
-  t.textContent  = msg;
+  t.textContent = msg;
   t.style.background = ok ? 'var(--success)' : 'var(--danger)';
   t.classList.add('show');
   clearTimeout(t._timer);
-  t._timer = setTimeout(() => t.classList.remove('show'), 2600);
+  t._timer = setTimeout(() => t.classList.remove('show'), 2800);
 }
 
 // ── initConteoForm ────────────────────────────────────────────
-// Orquesta toda la lógica de vinos.html y spirits.html.
-// config: { sector, usuario, productos }
 function initConteoForm({ sector, usuario, productos }) {
   const listEl        = document.getElementById('product-list');
   const searchEl      = document.getElementById('buscador');
@@ -47,11 +44,11 @@ function initConteoForm({ sector, usuario, productos }) {
 
   const DRAFT_KEY = 'grandbar_draft_' + sector;
 
-  // Estado: { sku → { qty: string, obs: string } }
+  // Estado: { sku → { depo1, local, depo2, obs } }
   let values = {};
   let query  = '';
 
-  // ── Inicializar fecha ──
+  // ── Fecha ──
   const hoy = new Date();
   fechaEl.value = hoy.toISOString().slice(0, 10);
   document.getElementById('fecha-display').textContent =
@@ -63,7 +60,7 @@ function initConteoForm({ sector, usuario, productos }) {
       isNaN(d) ? '' : d.toLocaleDateString('es-AR', { weekday: 'short', day: 'numeric', month: 'short' });
   });
 
-  // ── Cargar borrador ──
+  // ── Borrador ──
   try {
     const raw = localStorage.getItem(DRAFT_KEY);
     if (raw) values = JSON.parse(raw);
@@ -75,19 +72,17 @@ function initConteoForm({ sector, usuario, productos }) {
 
   function filledCount() { return Object.keys(values).length; }
 
-  // ── Barra de progreso ──
+  // ── Progreso ──
   function updateProgress() {
     const filled = filledCount();
     const total  = productos.length;
     const pct    = total > 0 ? filled / total : 0;
     const pctInt = Math.round(pct * 100);
-
     countFilledEl.textContent = filled;
     countTotalEl.textContent  = total;
     progressFill.style.width  = Math.min(pctInt, 100) + '%';
     progressFill.classList.toggle('ready', pct >= 0.8);
     if (progressPct) progressPct.textContent = pctInt + '%';
-
     btnEnviar.disabled = false;
     btnEnviar.textContent = 'Enviar conteo';
   }
@@ -103,20 +98,21 @@ function initConteoForm({ sector, usuario, productos }) {
     );
   }
 
-  // ── Construcción de fila ──
+  // ── Fila de producto ──
   function makeRow(p) {
-    const saved = values[p.sku];
-    const qty   = saved?.qty ?? '';
-    const obs   = saved?.obs ?? '';
+    const saved = values[p.sku] || {};
+    const d1    = saved.depo1 ?? '';
+    const loc   = saved.local ?? '';
+    const d2    = saved.depo2 ?? '';
+    const obs   = saved.obs   ?? '';
+    const total = (parseInt(d1) || 0) + (parseInt(loc) || 0) + (parseInt(d2) || 0);
+    const hasAny = d1 !== '' || loc !== '' || d2 !== '';
 
     const row = document.createElement('div');
-    row.className = 'prod-row' + (qty !== '' ? ' has-value' : '');
+    row.className = 'prod-row' + (hasAny ? ' has-value' : '');
     row.dataset.sku = p.sku;
 
-    // — Línea principal —
-    const main = document.createElement('div');
-    main.className = 'prod-main';
-
+    // — Info (nombre + proveedor) —
     const info = document.createElement('div');
     info.className = 'prod-info';
 
@@ -131,19 +127,53 @@ function initConteoForm({ sector, usuario, productos }) {
     info.appendChild(nombre);
     info.appendChild(prov);
 
+    // — Controles: 3 inputs + total + obs —
     const controls = document.createElement('div');
     controls.className = 'prod-controls';
 
-    const input = document.createElement('input');
-    input.className = 'qty-input';
-    input.type = 'number';
-    input.setAttribute('inputmode', 'numeric');
-    input.setAttribute('pattern', '[0-9]*');
-    input.placeholder = '0';
-    input.min = '0';
-    input.value = qty;
-    input.setAttribute('aria-label', 'Cantidad de ' + p.articulo);
+    function makeField(labelText, fieldKey, val) {
+      const wrap = document.createElement('div');
+      wrap.className = 'qty-field';
 
+      const lbl = document.createElement('span');
+      lbl.className = 'qty-label';
+      lbl.textContent = labelText;
+
+      const inp = document.createElement('input');
+      inp.className = 'qty-input';
+      inp.type = 'number';
+      inp.setAttribute('inputmode', 'numeric');
+      inp.setAttribute('pattern', '[0-9]*');
+      inp.placeholder = '0';
+      inp.min = '0';
+      inp.value = val;
+      inp.setAttribute('aria-label', `${labelText} de ${p.articulo}`);
+
+      wrap.appendChild(lbl);
+      wrap.appendChild(inp);
+      return { wrap, inp };
+    }
+
+    const { wrap: wD1,  inp: inpD1  } = makeField('Depo 1', 'depo1', d1);
+    const { wrap: wLoc, inp: inpLoc } = makeField('Local',  'local', loc);
+    const { wrap: wD2,  inp: inpD2  } = makeField('Depo 2', 'depo2', d2);
+
+    // Total (solo lectura)
+    const totalWrap = document.createElement('div');
+    totalWrap.className = 'qty-field qty-total-field';
+
+    const totalLbl = document.createElement('span');
+    totalLbl.className = 'qty-label qty-total-label';
+    totalLbl.textContent = 'Total';
+
+    const totalVal = document.createElement('div');
+    totalVal.className = 'qty-total-value';
+    totalVal.textContent = total > 0 ? total : '—';
+
+    totalWrap.appendChild(totalLbl);
+    totalWrap.appendChild(totalVal);
+
+    // Botón observaciones
     const obsBtn = document.createElement('button');
     obsBtn.className = 'obs-btn' + (obs ? ' has-obs' : '');
     obsBtn.setAttribute('aria-label', 'Observaciones');
@@ -151,13 +181,20 @@ function initConteoForm({ sector, usuario, productos }) {
     obsBtn.type = 'button';
     obsBtn.textContent = obs ? '✎' : '+';
 
-    controls.appendChild(input);
+    controls.appendChild(wD1);
+    controls.appendChild(wLoc);
+    controls.appendChild(wD2);
+    controls.appendChild(totalWrap);
     controls.appendChild(obsBtn);
+
+    // — Contenedor principal —
+    const main = document.createElement('div');
+    main.className = 'prod-main';
     main.appendChild(info);
     main.appendChild(controls);
     row.appendChild(main);
 
-    // — Panel de observaciones —
+    // — Panel observaciones —
     const obsPane = document.createElement('div');
     obsPane.className = 'prod-obs' + (obs ? '' : ' hidden');
 
@@ -170,9 +207,25 @@ function initConteoForm({ sector, usuario, productos }) {
     obsPane.appendChild(ta);
     row.appendChild(obsPane);
 
-    // ── Eventos ──
-    input.addEventListener('change', () => onQtyChange(p.sku, input.value.trim(), row));
-    input.addEventListener('focus', () => input.select());
+    // ── Actualizar total en pantalla ──
+    function recalcTotal() {
+      const t = (parseInt(inpD1.value) || 0) + (parseInt(inpLoc.value) || 0) + (parseInt(inpD2.value) || 0);
+      totalVal.textContent = t > 0 ? t : '—';
+      return t;
+    }
+
+    // ── Eventos inputs ──
+    function bindInput(inp, fieldKey) {
+      inp.addEventListener('change', () => {
+        onFieldChange(p.sku, fieldKey, inp.value.trim(), row);
+        recalcTotal();
+      });
+      inp.addEventListener('focus', () => inp.select());
+    }
+
+    bindInput(inpD1,  'depo1');
+    bindInput(inpLoc, 'local');
+    bindInput(inpD2,  'depo2');
 
     obsBtn.addEventListener('click', () => {
       const nowHidden = obsPane.classList.toggle('hidden');
@@ -185,10 +238,13 @@ function initConteoForm({ sector, usuario, productos }) {
     return row;
   }
 
-  function onQtyChange(sku, val, rowEl) {
-    if (!values[sku]) values[sku] = { qty: '', obs: '' };
-    values[sku].qty = val;
-    if (val === '' && !values[sku].obs) {
+  // ── Mutadores de estado ──
+  function onFieldChange(sku, field, val, rowEl) {
+    if (!values[sku]) values[sku] = { depo1: '', local: '', depo2: '', obs: '' };
+    values[sku][field] = val;
+    const v = values[sku];
+    const hasAny = v.depo1 !== '' || v.local !== '' || v.depo2 !== '';
+    if (!hasAny && !v.obs) {
       delete values[sku];
       rowEl?.classList.remove('has-value');
     } else {
@@ -199,18 +255,18 @@ function initConteoForm({ sector, usuario, productos }) {
   }
 
   function onObsChange(sku, val, obsBtn, rowEl) {
-    if (!values[sku]) values[sku] = { qty: '', obs: '' };
+    if (!values[sku]) values[sku] = { depo1: '', local: '', depo2: '', obs: '' };
     values[sku].obs = val;
-    if (!val && !values[sku].qty) delete values[sku];
+    const v = values[sku];
+    if (!val && v.depo1 === '' && v.local === '' && v.depo2 === '') delete values[sku];
     obsBtn.textContent = val ? '✎' : '+';
     obsBtn.classList.toggle('has-obs', Boolean(val));
     autosave();
   }
 
-  // ── Render de lista ──
+  // ── Render ──
   function renderList() {
     const filtered = getFiltered();
-
     if (metaEl) {
       metaEl.textContent = query
         ? `${filtered.length} resultado${filtered.length !== 1 ? 's' : ''} de ${productos.length}`
@@ -230,7 +286,7 @@ function initConteoForm({ sector, usuario, productos }) {
     listEl.appendChild(frag);
   }
 
-  // ── Búsqueda con debounce ──
+  // ── Búsqueda ──
   let searchTimer;
   searchEl.addEventListener('input', () => {
     clearTimeout(searchTimer);
@@ -255,23 +311,35 @@ function initConteoForm({ sector, usuario, productos }) {
   // ── Enviar conteo ──
   btnEnviar.addEventListener('click', async () => {
     const fecha = fechaEl.value || new Date().toISOString().slice(0, 10);
+    const sectorLabel = sector === 'vinos' ? 'Vinos' : 'Spirits y Gaseosas';
+    const sectorSlug  = sector === 'vinos' ? 'vinos' : 'spirits';
 
-    // Construir resumen de texto para el template
+    // Construir lista completa (productos tocados, con totales)
     const conStock = productos
       .map(p => {
-        const v = values[p.sku];
-        const qty = v?.qty ? parseInt(v.qty, 10) : 0;
-        return { sku: p.sku, proveedor: p.proveedor, articulo: p.articulo, qty, obs: v?.obs || '' };
+        const v    = values[p.sku] || {};
+        const depo1 = parseInt(v.depo1) || 0;
+        const local = parseInt(v.local) || 0;
+        const depo2 = parseInt(v.depo2) || 0;
+        const total = depo1 + local + depo2;
+        return {
+          sku:           p.sku,
+          proveedor:     p.proveedor,
+          articulo:      p.articulo,
+          stock_sistema: p.stock_sistema || 0,
+          depo1, local, depo2, total,
+          obs: v.obs || '',
+        };
       })
-      .filter(p => p.qty > 0 || p.obs);
+      .filter(p => p.total > 0 || p.obs);
 
+    // ── Mensaje de email ──
     const lineas = conStock.map(p => {
       const obsLine = p.obs ? ` [${p.obs}]` : '';
-      return `• [${p.sku}] ${p.articulo}: ${p.qty}${obsLine}`;
+      return `• [${p.sku}] ${p.articulo} — D1:${p.depo1} Loc:${p.local} D2:${p.depo2} = ${p.total}${obsLine}`;
     });
 
-    const totUnidades = conStock.reduce((s, p) => s + p.qty, 0);
-    const sectorLabel = sector === 'vinos' ? 'Vinos' : 'Spirits y Gaseosas';
+    const totUnidades = conStock.reduce((s, p) => s + p.total, 0);
 
     const message = [
       `Sector: ${sectorLabel}`,
@@ -283,7 +351,7 @@ function initConteoForm({ sector, usuario, productos }) {
       ...lineas,
     ].join('\n');
 
-    // Guardar en localStorage
+    // ── Guardar en localStorage ──
     const registro = {
       sector, usuario, fecha,
       timestamp: new Date().toISOString(),
@@ -302,23 +370,74 @@ function initConteoForm({ sector, usuario, productos }) {
       return;
     }
 
-    // Generar y descargar Excel
+    // ── Generar Excel ──
     try {
-      const sectorSlug = sector === 'vinos' ? 'vinos' : 'spirits';
       const wb = XLSX.utils.book_new();
-      const filas = [
-        ['SKU', 'Proveedor', 'Artículo', 'Cantidad', 'Observaciones'],
-        ...conStock.map(p => [p.sku, p.proveedor, p.articulo, p.qty, p.obs]),
+
+      // Cabecera + datos
+      const dataRows = conStock.map(p => [
+        p.sku,
+        p.articulo,
+        p.stock_sistema,
+        p.depo1,
+        p.local,
+        p.depo2,
+        p.total,
+        p.total - p.stock_sistema,
+      ]);
+
+      const wsData = [
+        ['SKU', 'Descripción', 'Stock Sistema', 'Depo 1', 'Local', 'Depo 2', 'Total', 'Diferencia'],
+        ...dataRows,
       ];
-      const ws = XLSX.utils.aoa_to_sheet(filas);
-      ws['!cols'] = [{ wch: 12 }, { wch: 36 }, { wch: 52 }, { wch: 10 }, { wch: 30 }];
+
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+      // Anchos de columna
+      ws['!cols'] = [
+        { wch: 13 }, // SKU
+        { wch: 54 }, // Descripción
+        { wch: 14 }, // Stock Sistema
+        { wch: 10 }, // Depo 1
+        { wch: 10 }, // Local
+        { wch: 10 }, // Depo 2
+        { wch: 10 }, // Total
+        { wch: 12 }, // Diferencia
+      ];
+
+      // Estilos con xlsx-js-style
+      const styleHeader = {
+        font:      { bold: true, color: { rgb: 'F1EBD6' } },
+        fill:      { fgColor: { rgb: '1F447F' } },
+        alignment: { horizontal: 'center' },
+      };
+      const styleDiffNeg = {
+        font: { bold: true, color: { rgb: 'C0392B' } },
+      };
+      const styleDiffPos = {
+        font: { bold: true, color: { rgb: '2E8B57' } },
+      };
+
+      ['A1','B1','C1','D1','E1','F1','G1','H1'].forEach(ref => {
+        if (ws[ref]) ws[ref].s = styleHeader;
+      });
+
+      conStock.forEach((p, i) => {
+        const diff    = p.total - p.stock_sistema;
+        const rowNum  = i + 2; // fila 1 es header
+        const cellRef = `H${rowNum}`;
+        if (ws[cellRef]) {
+          ws[cellRef].s = diff < 0 ? styleDiffNeg : diff > 0 ? styleDiffPos : {};
+        }
+      });
+
       XLSX.utils.book_append_sheet(wb, ws, 'Stock');
       XLSX.writeFile(wb, `stock_${sectorSlug}_${fecha}.xlsx`);
     } catch (e) {
       console.error('Excel error:', e);
     }
 
-    // Enviar email
+    // ── Enviar email ──
     btnEnviar.disabled = true;
     btnEnviar.textContent = 'Enviando…';
 
@@ -343,7 +462,6 @@ function initConteoForm({ sector, usuario, productos }) {
   });
 
   // ── Arranque ──
-  // Diferimos el render inicial para que el primer paint ocurra antes
   countTotalEl.textContent = productos.length;
   updateProgress();
   setTimeout(() => renderList(), 30);

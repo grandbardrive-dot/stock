@@ -34,16 +34,17 @@ const spirits = [];
 let   omitidos = 0;
 
 datos.forEach(row => {
-  const proveedor = String(row[0] ?? '').trim();
-  const sku       = String(row[1] ?? '').trim();
-  const articulo  = String(row[2] ?? '').trim();
+  const proveedor     = String(row[0] ?? '').trim();
+  const sku           = String(row[1] ?? '').trim();
+  const articulo      = String(row[2] ?? '').trim();
+  const stock_sistema = typeof row[3] === 'number' ? row[3] : (parseFloat(row[3]) || 0);
 
   if (!sku || !articulo) { omitidos++; return; }
 
   const sector = clasificar(sku);
   if (!sector) { omitidos++; return; }
 
-  const producto = { sku, proveedor, articulo };
+  const producto = { sku, proveedor, articulo, stock_sistema };
   if (sector === 'vinos')   vinos.push(producto);
   else                      spirits.push(producto);
 });
@@ -54,7 +55,8 @@ function serializarArray(nombre, arr) {
     const sku  = JSON.stringify(p.sku);
     const prov = JSON.stringify(p.proveedor);
     const art  = JSON.stringify(p.articulo);
-    return `  { sku: ${sku.padEnd(14)}, proveedor: ${prov.padEnd(50)}, articulo: ${art} }`;
+    const ss   = p.stock_sistema;
+    return `  { sku: ${sku.padEnd(14)}, proveedor: ${prov.padEnd(50)}, articulo: ${art.padEnd(60)}, stock_sistema: ${ss} }`;
   });
   return `const ${nombre} = [\n${items.join(',\n')},\n];`;
 }

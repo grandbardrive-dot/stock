@@ -454,23 +454,48 @@ main {
   text-transform: uppercase;
 }
 
-/* ── Controles ── */
+/* ── Controles: 3 inputs + total + obs ── */
+
+/* prod-main usa flex column para que info ocupe el ancho completo */
+.prod-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
 .prod-controls {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   gap: 0.35rem;
+}
+
+/* Cada campo: label arriba + input abajo */
+.qty-field {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
   flex-shrink: 0;
 }
 
+.qty-label {
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  line-height: 1;
+}
+
 .qty-input {
-  width: 72px;
-  height: 48px;
+  width: 58px;
+  height: 44px;
   background: var(--surface2);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   color: var(--cream);
   font-family: var(--font);
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: 700;
   text-align: center;
   outline: none;
@@ -487,6 +512,28 @@ main {
   border-color: var(--gold);
   background: var(--surface);
   box-shadow: 0 0 0 2px rgba(203,168,106,0.15);
+}
+
+/* Separador visual entre los 3 campos y el total */
+.qty-total-field {
+  margin-left: 0.2rem;
+  padding-left: 0.35rem;
+  border-left: 1px solid var(--border);
+}
+
+.qty-total-label { color: var(--gold-dim); }
+
+.qty-total-value {
+  height: 44px;
+  min-width: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--gold);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
 }
 
 /* Botón observaciones */
