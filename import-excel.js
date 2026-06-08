@@ -12,6 +12,25 @@ const PREFIJOS_VINOS   = ['01','11','12','13','14','15','16','17','18','19'];
 const PREFIJOS_SPIRITS = ['02','03','04','05','07','08'];
 const PREFIJOS_EXCLUIR = ['30','31','40','60','90','91','92'];
 
+// ── Proveedores a excluir (no son productos de depósito) ─────
+const PROVEEDORES_EXCLUIR = new Set([
+  'Bienes',
+  'Bienes de uso',
+  'Cheques',
+  'Compensaciones',
+  'Cristaleria',
+  'Del Valle',
+  'Excepciones',
+  'Gastos Bancarios',
+  'Insumos Limpieza',
+  'Logistica',
+  'Personal',
+  'Productos Discontinuados',
+  'Puro Tabaco',
+  'Repuestos Rodados',
+  'XXX',
+]);
+
 // ── Leer Excel ───────────────────────────────────────────────
 const wb   = xlsx.readFile(EXCEL_FILE);
 const ws   = wb.Sheets[wb.SheetNames[0]];
@@ -43,6 +62,8 @@ datos.forEach(row => {
 
   const sector = clasificar(sku);
   if (!sector) { omitidos++; return; }
+
+  if (PROVEEDORES_EXCLUIR.has(proveedor)) { omitidos++; return; }
 
   const producto = { sku, proveedor, articulo, stock_sistema };
   if (sector === 'vinos')   vinos.push(producto);
