@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0a0a0a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title>Grandbar — Control de Stock</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&family=Barlow+Condensed:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ══ PANTALLA 1: Selección de usuario ══ -->
+<div id="screen-usuario" class="screen">
+  <div class="login-wrap">
+
+    <div class="login-logo">
+      <img src="logo.png" alt="GrandBar" width="220" height="auto">
+      <span class="logo-tag">Control de Stock</span>
+    </div>
+
+    <span class="date-chip" id="date-label">—</span>
+
+    <span class="divider-label">Seleccioná tu usuario</span>
+
+    <div class="user-cards">
+
+      <div class="user-card" data-sector="vinos" data-usuario="Lucas Porro" role="button" tabindex="0">
+        <div class="avatar avatar-wine">LP</div>
+        <div class="info">
+          <div class="name">Lucas Porro</div>
+          <div class="sector">Vinos</div>
+        </div>
+        <span class="arrow">›</span>
+      </div>
+
+      <div class="user-card" data-sector="spirits" data-usuario="Lucas Buenanueva" role="button" tabindex="0">
+        <div class="avatar avatar-spirit">LB</div>
+        <div class="info">
+          <div class="name">Lucas Buenanueva</div>
+          <div class="sector">Spirits &amp; Gaseosas</div>
+        </div>
+        <span class="arrow">›</span>
+      </div>
+
+    </div>
+
+    <div style="display:flex;gap:1.25rem;margin-top:0.5rem">
+      <a href="index.html" style="font-size:0.65rem;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;text-decoration:none;opacity:0.55">← Inicio</a>
+      <a href="admin.html" style="font-size:0.65rem;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;text-decoration:none;opacity:0.55">⚙ Admin</a>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ PANTALLA 2: Selección de proveedores ══ -->
+<div id="screen-proveedor" class="screen hidden">
+
+  <header class="prov-topbar">
+    <button class="prov-back-btn" id="prov-back" aria-label="Volver">‹</button>
+    <div class="prov-topbar-info">
+      <div class="prov-sector-label" id="prov-sector-label">Vinos</div>
+      <div class="prov-user-label" id="prov-user-label">Lucas Porro</div>
+    </div>
+  </header>
+
+  <div class="prov-subheader">
+    <p class="prov-pregunta">¿Qué stock vas a realizar hoy?</p>
+    <div class="prov-btn-bar">
+      <button class="prov-btn" id="btn-sel-todos">Seleccionar todos</button>
+      <button class="prov-btn" id="btn-limpiar">Limpiar selección</button>
+    </div>
+    <div class="prov-sel-count" id="prov-sel-count">Ningún proveedor seleccionado</div>
+  </div>
+
+  <div id="prov-list" class="prov-list" role="list"></div>
+
+  <div class="prov-footer">
+    <button class="btn-comenzar" id="btn-comenzar" disabled>Continuar →</button>
+  </div>
+
+</div>
+
+<!-- ══ PANTALLA 3: Selección de líneas ══ -->
+<div id="screen-lineas" class="screen hidden">
+
+  <header class="prov-topbar">
+    <button class="prov-back-btn" id="lineas-back" aria-label="Volver">‹</button>
+    <div class="prov-topbar-info">
+      <div class="prov-sector-label" id="lineas-sector-label">Vinos</div>
+      <div class="prov-user-label" id="lineas-user-label">Lucas Porro</div>
+    </div>
+  </header>
+
+  <div class="prov-subheader">
+    <p class="prov-pregunta">¿Qué líneas vas a contar?</p>
+    <div class="prov-btn-bar">
+      <button class="prov-btn" id="lineas-sel-todas">Seleccionar todas</button>
+      <button class="prov-btn" id="lineas-limpiar">Limpiar</button>
+    </div>
+    <div class="prov-sel-count" id="lineas-sel-count">Ninguna línea seleccionada</div>
+  </div>
+
+  <div id="lineas-list" class="prov-list" role="list"></div>
+
+  <div class="prov-footer">
+    <button class="btn-comenzar" id="btn-comenzar-lineas" disabled>Comenzar conteo</button>
+  </div>
+
+</div>
+
+<script src="productos.js"></script>
+<script src="app.js"></script>
+<script>
+(function () {
+
+  // ══ Estado global ══════════════════════════════════════════════
+  let sectorActual    = null;
+  let usuarioActual   = null;
+  let seleccionados   = new Set(); // proveedores
+  let lineasSel       = new Set(); // prefijos de 6 dígitos
+  let lineasDisponibles = [];      // [{ prefijo, nombre, cant, proveedor }]
+
+  // ── Elementos ──────────────────────────────────────────────────
+  const screenUsuario   = document.getElementById('screen-usuario');
+  const screenProveedor = document.getElementById('screen-proveedor');
+  const screenLineas    = document.getElementById('screen-lineas');
+
+  renderDate('date-label');
+
+  // ══ UTILIDADES ═════════════════════════════════════════════════
+
+  function getArraySector(sector) {
+    return sector === 'vinos' ? PRODUCTOS_VINOS : PRODUCTOS_SPIRITS;
+  }
+
+  // Obtener proveedores únicos con conteo de SKUs
+  function getProveedores(sector) {
+    const counts = {};
+    getArraySector(sector).forEach(p => {
+      counts[p.proveedor] = (counts[p.proveedor] || 0) + 1;
+    });
+    return Object.entries(counts)
+      .sort((a, b) => a[0].localeCompare(b[0], 'es'))
+      .map(([nombre, cant]) => ({ nombre, cant }));
+  }
+
+  // ── Detección de líneas por prefijo de 6 dígitos ──────────────
+  function detectarLineas(productos) {
+    const grupos = {};
+    productos
+      .filter(p => !p.articulo.startsWith('Promo '))
+      .forEach(p => {
+        const pref = p.sku.slice(0, 6);
+        if (!grupos[pref]) grupos[pref] = { prods: [], proveedor: p.proveedor };
+        grupos[pref].prods.push(p);
+      });
+
+    return Object.entries(grupos)
+      .map(([prefijo, { prods, proveedor }]) => ({
+        prefijo,
+        nombre:   nombreComun(prods.map(p => p.articulo)),
+        cant:     prods.length,
+        proveedor,
+      }))
+      .sort((a, b) =>
+        a.proveedor.localeCompare(b.proveedor, 'es') ||
+        a.nombre.localeCompare(b.nombre, 'es')
+      );
+  }
+
+  // Encontrar palabras iniciales comunes entre nombres de productos
+  function nombreComun(nombres) {
+    if (!nombres.length) return 'Línea';
+
+    // Quitar el tamaño final ("x 750ml", "x 1L", etc.) para comparar
+    const limpios = nombres.map(n =>
+      n.replace(/\s+x\s+[\d,.]+\s*(ml|cc|lt|l|kg|un|bot|pack).*$/i, '').trim()
+    );
+
+    if (limpios.length === 1) return limpios[0];
+
+    const palabras = limpios.map(n => n.split(/\s+/));
+    const comunes  = [];
+
+    for (let i = 0; i < palabras[0].length; i++) {
+      const pal = palabras[0][i];
+      if (palabras.every(p => p[i] === pal)) comunes.push(pal);
+      else break;
+    }
+
+    return comunes.length > 0
+      ? comunes.join(' ')
+      : limpios[0].split(/\s+/).slice(0, 2).join(' ');
+  }
+
+  // ══ PANTALLA 2 — Proveedores ════════════════════════════════════
+
+  const provSectorLabel = document.getElementById('prov-sector-label');
+  const provUserLabel   = document.getElementById('prov-user-label');
+  const provList        = document.getElementById('prov-list');
+  const selCount        = document.getElementById('prov-sel-count');
+  const btnComenzar     = document.getElementById('btn-comenzar');
+  const btnSelTodos     = document.getElementById('btn-sel-todos');
+  const btnLimpiar      = document.getElementById('btn-limpiar');
+  const btnBack         = document.getElementById('prov-back');
+
+  function renderProveedores(proveedores) {
+    provList.innerHTML = '';
+    const frag = document.createDocumentFragment();
+    proveedores.forEach(({ nombre, cant }) => {
+      const item = document.createElement('div');
+      item.className = 'prov-item' + (seleccionados.has(nombre) ? ' selected' : '');
+      item.dataset.nombre = nombre;
+      item.setAttribute('role', 'checkbox');
+      item.setAttribute('aria-checked', String(seleccionados.has(nombre)));
+      item.tabIndex = 0;
+      item.innerHTML = `
+        <div class="prov-checkbox"></div>
+        <div class="prov-nombre">${nombre}</div>
+        <div class="prov-cant">${cant} SKU${cant !== 1 ? 's' : ''}</div>`;
+      item.addEventListener('click', () => toggleProveedor(nombre, item));
+      item.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleProveedor(nombre, item); }
+      });
+      frag.appendChild(item);
+    });
+    provList.appendChild(frag);
+    actualizarContadorProv();
+  }
+
+  function toggleProveedor(nombre, itemEl) {
+    if (seleccionados.has(nombre)) {
+      seleccionados.delete(nombre);
+      itemEl.classList.remove('selected');
+      itemEl.setAttribute('aria-checked', 'false');
+    } else {
+      seleccionados.add(nombre);
+      itemEl.classList.add('selected');
+      itemEl.setAttribute('aria-checked', 'true');
+    }
+    actualizarContadorProv();
+  }
+
+  function actualizarContadorProv() {
+    const n = seleccionados.size;
+    selCount.innerHTML = n === 0
+      ? 'Ningún proveedor seleccionado'
+      : `<strong>${n}</strong> proveedor${n !== 1 ? 'es' : ''} seleccionado${n !== 1 ? 's' : ''}`;
+    btnComenzar.disabled  = n === 0;
+    btnComenzar.textContent = n === 0 ? 'Continuar →' : `Continuar con ${n} proveedor${n !== 1 ? 'es' : ''} →`;
+  }
+
+  btnSelTodos.addEventListener('click', () => {
+    provList.querySelectorAll('.prov-item').forEach(item => {
+      seleccionados.add(item.dataset.nombre);
+      item.classList.add('selected');
+      item.setAttribute('aria-checked', 'true');
+    });
+    actualizarContadorProv();
+  });
+
+  btnLimpiar.addEventListener('click', () => {
+    seleccionados.clear();
+    provList.querySelectorAll('.prov-item').forEach(item => {
+      item.classList.remove('selected');
+      item.setAttribute('aria-checked', 'false');
+    });
+    actualizarContadorProv();
+  });
+
+  btnBack.addEventListener('click', () => {
+    seleccionados.clear();
+    screenProveedor.classList.add('hidden');
+    screenUsuario.classList.remove('hidden');
+  });
+
+  // Pantalla 2 → Pantalla 3
+  btnComenzar.addEventListener('click', () => {
+    if (seleccionados.size === 0) return;
+    mostrarPantallaLineas();
+  });
+
+  // ══ PANTALLA 3 — Líneas ═════════════════════════════════════════
+
+  const lineasSectorLabel = document.getElementById('lineas-sector-label');
+  const lineasUserLabel   = document.getElementById('lineas-user-label');
+  const lineasList        = document.getElementById('lineas-list');
+  const lineasSelCount    = document.getElementById('lineas-sel-count');
+  const btnComenzarLineas = document.getElementById('btn-comenzar-lineas');
+  const btnLineasSelTodas = document.getElementById('lineas-sel-todas');
+  const btnLineasLimpiar  = document.getElementById('lineas-limpiar');
+  const btnLineasBack     = document.getElementById('lineas-back');
+
+  function mostrarPantallaLineas() {
+    const productos = getArraySector(sectorActual);
+    const provsFiltro = [...seleccionados];
+    const productosProv = productos.filter(p => provsFiltro.includes(p.proveedor));
+
+    lineasDisponibles = detectarLineas(productosProv);
+
+    // Pre-seleccionar todas si hay pocos resultados o 1 proveedor
+    const preseleccionarTodas = seleccionados.size === 1 || lineasDisponibles.length <= 8;
+    lineasSel = preseleccionarTodas
+      ? new Set(lineasDisponibles.map(l => l.prefijo))
+      : new Set();
+
+    const sectorLabel = sectorActual === 'vinos' ? 'Vinos' : 'Spirits & Gaseosas';
+    lineasSectorLabel.textContent = sectorLabel;
+    lineasUserLabel.textContent   = usuarioActual;
+
+    renderLineas();
+    screenProveedor.classList.add('hidden');
+    screenLineas.classList.remove('hidden');
+  }
+
+  function renderLineas() {
+    lineasList.innerHTML = '';
+    const frag = document.createDocumentFragment();
+
+    // Agrupar por proveedor si hay más de uno
+    const multiProv = new Set(lineasDisponibles.map(l => l.proveedor)).size > 1;
+
+    // Procesar en orden (ya vienen ordenados por proveedor + nombre)
+    let provActual = null;
+    lineasDisponibles.forEach(l => {
+      // Cabecera de proveedor
+      if (multiProv && l.proveedor !== provActual) {
+        provActual = l.proveedor;
+        const header = document.createElement('div');
+        header.className = 'linea-group-header';
+        header.textContent = l.proveedor;
+        frag.appendChild(header);
+      }
+
+      const item = document.createElement('div');
+      item.className = 'prov-item' + (lineasSel.has(l.prefijo) ? ' selected' : '');
+      item.dataset.prefijo = l.prefijo;
+      item.setAttribute('role', 'checkbox');
+      item.setAttribute('aria-checked', String(lineasSel.has(l.prefijo)));
+      item.tabIndex = 0;
+      item.innerHTML = `
+        <div class="prov-checkbox"></div>
+        <div class="prov-nombre">${l.nombre}</div>
+        <div class="prov-cant">${l.cant} SKU${l.cant !== 1 ? 's' : ''}</div>`;
+      item.addEventListener('click', () => toggleLinea(l.prefijo, item));
+      item.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleLinea(l.prefijo, item); }
+      });
+      frag.appendChild(item);
+    });
+
+    lineasList.appendChild(frag);
+    actualizarContadorLineas();
+  }
+
+  function toggleLinea(prefijo, itemEl) {
+    if (lineasSel.has(prefijo)) {
+      lineasSel.delete(prefijo);
+      itemEl.classList.remove('selected');
+      itemEl.setAttribute('aria-checked', 'false');
+    } else {
+      lineasSel.add(prefijo);
+      itemEl.classList.add('selected');
+      itemEl.setAttribute('aria-checked', 'true');
+    }
+    actualizarContadorLineas();
+  }
+
+  function actualizarContadorLineas() {
+    const n = lineasSel.size;
+    lineasSelCount.innerHTML = n === 0
+      ? 'Ninguna línea seleccionada'
+      : `<strong>${n}</strong> línea${n !== 1 ? 's' : ''} seleccionada${n !== 1 ? 's' : ''}`;
+    btnComenzarLineas.disabled  = n === 0;
+    btnComenzarLineas.textContent = n === 0
+      ? 'Comenzar conteo'
+      : `Comenzar conteo (${n} línea${n !== 1 ? 's' : ''})`;
+  }
+
+  btnLineasSelTodas.addEventListener('click', () => {
+    lineasList.querySelectorAll('.prov-item').forEach(item => {
+      lineasSel.add(item.dataset.prefijo);
+      item.classList.add('selected');
+      item.setAttribute('aria-checked', 'true');
+    });
+    actualizarContadorLineas();
+  });
+
+  btnLineasLimpiar.addEventListener('click', () => {
+    lineasSel.clear();
+    lineasList.querySelectorAll('.prov-item').forEach(item => {
+      item.classList.remove('selected');
+      item.setAttribute('aria-checked', 'false');
+    });
+    actualizarContadorLineas();
+  });
+
+  btnLineasBack.addEventListener('click', () => {
+    lineasSel.clear();
+    screenLineas.classList.add('hidden');
+    screenProveedor.classList.remove('hidden');
+  });
+
+  // Pantalla 3 → Formulario
+  btnComenzarLineas.addEventListener('click', () => {
+    if (lineasSel.size === 0) return;
+
+    localStorage.setItem('proveedores_seleccionados', JSON.stringify({
+      sector:      sectorActual,
+      usuario:     usuarioActual,
+      proveedores: [...seleccionados].sort(),
+      lineas:      [...lineasSel].sort(),
+    }));
+
+    window.location.href = sectorActual === 'vinos' ? 'vinos.html' : 'spirits.html';
+  });
+
+  // ══ PANTALLA 1 — Click en tarjeta de usuario ════════════════════
+
+  document.querySelectorAll('.user-card').forEach(card => {
+    function activar() {
+      sectorActual  = card.dataset.sector;
+      usuarioActual = card.dataset.usuario;
+      seleccionados.clear();
+
+      provSectorLabel.textContent = sectorActual === 'vinos' ? 'Vinos' : 'Spirits & Gaseosas';
+      provUserLabel.textContent   = usuarioActual;
+
+      renderProveedores(getProveedores(sectorActual));
+      screenUsuario.classList.add('hidden');
+      screenProveedor.classList.remove('hidden');
+    }
+    card.addEventListener('click', activar);
+    card.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activar(); }
+    });
+  });
+
+})();
+</script>
+</body>
+</html>
