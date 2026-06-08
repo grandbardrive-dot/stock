@@ -343,19 +343,33 @@ function initConteoForm({ sector, usuario, productos, proveedores }) {
     // Overrides de stock sistema cargados desde Córdoba Software
     const stockOverrides = JSON.parse(localStorage.getItem('grandbar_stock_sistema') || '{}');
 
-    // Construir lista completa (productos tocados, con totales)
+    // Mapa de stock promo: { "Chandon Brut x 750ml" → stock_sistema del "Promo Chandon Brut x 750ml" }
+    // Se construye sobre TODOS los productos del sector (no solo los filtrados por proveedor)
+    const promoMap = {};
+    productos.forEach(p => {
+      if (p.articulo.startsWith('Promo ')) {
+        const baseName = p.articulo.slice(6); // quitar "Promo "
+        promoMap[baseName] = (stockOverrides[p.sku] !== undefined ? stockOverrides[p.sku] : p.stock_sistema) || 0;
+      }
+    });
+
+    // Construir lista completa — excluir productos "Promo ..."
     const conStock = productos
+      .filter(p => !p.articulo.startsWith('Promo '))
       .map(p => {
-        const v    = values[p.sku] || {};
+        const v     = values[p.sku] || {};
         const depo1 = parseInt(v.depo1) || 0;
         const local = parseInt(v.local) || 0;
         const depo2 = parseInt(v.depo2) || 0;
         const total = depo1 + local + depo2;
+        const stock_sistema = (stockOverrides[p.sku] !== undefined ? stockOverrides[p.sku] : p.stock_sistema) || 0;
+        const promo = promoMap[p.articulo] || 0;
         return {
-          sku:           p.sku,
-          proveedor:     p.proveedor,
-          articulo:      p.articulo,
-          stock_sistema: (stockOverrides[p.sku] !== undefined ? stockOverrides[p.sku] : p.stock_sistema) || 0,
+          sku: p.sku,
+          proveedor: p.proveedor,
+          articulo: p.articulo,
+          stock_sistema,
+          promo,
           depo1, local, depo2, total,
           obs: v.obs || '',
         };
@@ -409,16 +423,18 @@ function initConteoForm({ sector, usuario, productos, proveedores }) {
       const wb = XLSX.utils.book_new();
 
       // Cabecera + datos
+      // Columnas: SKU | Descripción | Stock Sistema | Promo | Depo 1 | Local | Depo 2 | Total | Diferencia
+      // Diferencia = Total - (Stock Sistema + Promo)
       const dataRows = conStock.map(p => [
         p.sku,
         p.articulo,
-        p.proveedor,
         p.stock_sistema,
+        p.promo,
         p.depo1,
         p.local,
         p.depo2,
         p.total,
-        p.total - p.stock_sistema,
+        p.total - (p.stock_sistema + p.promo),
       ]);
 
       const provResumen = proveedores && proveedores.length
@@ -429,18 +445,18 @@ function initConteoForm({ sector, usuario, productos, proveedores }) {
         [`${sectorLabel} — ${usuario} — ${fecha}`],
         [`Proveedores: ${provResumen}`],
         [],   // fila vacía separadora
-        ['SKU', 'Descripción', 'Proveedor', 'Stock Sistema', 'Depo 1', 'Local', 'Depo 2', 'Total', 'Diferencia'],
+        ['SKU', 'Descripción', 'Stock Sistema', 'Promo', 'Depo 1', 'Local', 'Depo 2', 'Total', 'Diferencia'],
         ...dataRows,
       ];
 
       const ws = XLSX.utils.aoa_to_sheet(wsData);
 
-      // Anchos de columna (9 columnas: +Proveedor)
+      // Anchos de columna (9 columnas — sin Proveedor, con Promo)
       ws['!cols'] = [
         { wch: 13 }, // SKU
-        { wch: 50 }, // Descripción
-        { wch: 30 }, // Proveedor
+        { wch: 54 }, // Descripción
         { wch: 14 }, // Stock Sistema
+        { wch: 10 }, // Promo
         { wch: 10 }, // Depo 1
         { wch: 10 }, // Local
         { wch: 10 }, // Depo 2
@@ -448,14 +464,9 @@ function initConteoForm({ sector, usuario, productos, proveedores }) {
         { wch: 12 }, // Diferencia
       ];
 
-      // Estilos: título (fila 1), subtítulo (fila 2), header datos (fila 4)
-      const styleTitulo = {
-        font: { bold: true, sz: 13, color: { rgb: 'CBA86A' } },
-      };
-      const styleSubtitulo = {
-        font: { italic: true, color: { rgb: '8a8f9a' } },
-      };
-      const styleHeader = {
+      const styleTitulo    = { font: { bold: true, sz: 13, color: { rgb: 'CBA86A' } } };
+      const styleSubtitulo = { font: { italic: true, color: { rgb: '8a8f9a' } } };
+      const styleHeader    = {
         font:      { bold: true, color: { rgb: 'F1EBD6' } },
         fill:      { fgColor: { rgb: '1F447F' } },
         alignment: { horizontal: 'center' },
@@ -471,10 +482,10 @@ function initConteoForm({ sector, usuario, productos, proveedores }) {
         if (ws[ref]) ws[ref].s = styleHeader;
       });
 
-      // Columna I (Diferencia) = índice 8, filas desde 5
+      // Columna I (Diferencia) = fila 5 en adelante
       conStock.forEach((p, i) => {
-        const diff    = p.total - p.stock_sistema;
-        const rowNum  = i + 5; // 3 filas meta + 1 header = fila 5 en adelante
+        const diff    = p.total - (p.stock_sistema + p.promo);
+        const rowNum  = i + 5;
         const cellRef = `I${rowNum}`;
         if (ws[cellRef]) {
           ws[cellRef].s = diff < 0 ? styleDiffNeg : diff > 0 ? styleDiffPos : {};
