@@ -854,6 +854,19 @@ main {
   margin-top: 0.1rem;
 }
 
+/* Cabecera de proveedor dentro de la lista de líneas */
+.linea-group-header {
+  padding: 0.55rem 1rem 0.3rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold);
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  border-top: 1px solid var(--border);
+}
+
 /* Header del formulario: lista de proveedores seleccionados */
 .header-proveedores {
   font-size: 0.65rem;

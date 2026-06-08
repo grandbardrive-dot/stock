@@ -92,10 +92,14 @@
   const _sel = JSON.parse(localStorage.getItem('proveedores_seleccionados') || '{}');
   const _provs = (_sel.sector === 'vinos' && _sel.proveedores?.length)
     ? _sel.proveedores : null;
+  const _lineas = (_sel.lineas?.length) ? _sel.lineas : null;
   const _base = _provs
     ? PRODUCTOS_VINOS.filter(p => _provs.includes(p.proveedor))
     : PRODUCTOS_VINOS;
-  const _productos = _base.filter(p => !p.articulo.startsWith('Promo '));
+  const _baseFiltrado = _lineas
+    ? _base.filter(p => _lineas.includes(p.sku.slice(0, 6)))
+    : _base;
+  const _productos = _baseFiltrado.filter(p => !p.articulo.startsWith('Promo '));
 
   initConteoForm({
     sector:      'vinos',
