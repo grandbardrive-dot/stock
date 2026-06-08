@@ -597,8 +597,12 @@ function initConteoForm({ sector, usuario, productos, proveedores }) {
       });
 
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.message || `HTTP ${res.status}`);
+        const rawBody = await res.text().catch(() => '');
+        let msg;
+        try { msg = JSON.parse(rawBody).message; } catch {}
+        const e = new Error(msg || `HTTP ${res.status}`);
+        e._rawBody = rawBody;
+        throw e;
       }
 
       values = {};
@@ -608,6 +612,15 @@ function initConteoForm({ sector, usuario, productos, proveedores }) {
 
     } catch (err) {
       console.error('Resend error:', err);
+
+      // DEBUG — mostrar error completo para diagnóstico
+      let debugMsg = `ERROR AL ENVIAR MAIL\n\n${err.message || err}`;
+      try {
+        // Si el fetch llegó al server, intentar leer el body crudo
+        if (typeof err._rawBody === 'string') debugMsg += `\n\nRespuesta servidor:\n${err._rawBody}`;
+      } catch {}
+      alert(debugMsg);
+
       showToast('No se pudo enviar el email — conteo guardado localmente', false);
 
       // Descarga de respaldo si el email falló
