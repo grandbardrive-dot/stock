@@ -1,7 +1,7 @@
 /* ── GRANDBAR STOCK — shared logic ── */
 
 // ── Resend ────────────────────────────────────────────────────
-const RESEND_API_KEY = 're_xxxxxxxxx'; // REEMPLAZAR con tu API key de Resend
+const RESEND_API_KEY = 're_RPxitaUb_nvqgCtJLTeVHdGtqufVPmqvn';
 const RESEND_FROM    = 'Stock GrandBar <onboarding@resend.dev>';
 const RESEND_TO      = [
   'facturacion@grandbar.com.ar',
