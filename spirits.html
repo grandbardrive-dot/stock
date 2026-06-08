@@ -24,6 +24,7 @@
     <div class="header-title">
       <div class="header-sector">Spirits &amp; Gaseosas</div>
       <div class="header-user">Lucas Buenanueva</div>
+      <div class="header-proveedores" id="header-proveedores" style="display:none"></div>
     </div>
 
     <div class="header-date">
@@ -87,10 +88,20 @@
 <script src="app.js"></script>
 <script>
   initEmailJS();
+
+  // Leer proveedores seleccionados desde index.html
+  const _sel = JSON.parse(localStorage.getItem('proveedores_seleccionados') || '{}');
+  const _provs = (_sel.sector === 'spirits' && _sel.proveedores?.length)
+    ? _sel.proveedores : null;
+  const _productos = _provs
+    ? PRODUCTOS_SPIRITS.filter(p => _provs.includes(p.proveedor))
+    : PRODUCTOS_SPIRITS;
+
   initConteoForm({
-    sector:    'spirits',
-    usuario:   'Lucas Buenanueva',
-    productos: PRODUCTOS_SPIRITS,
+    sector:      'spirits',
+    usuario:     'Lucas Buenanueva',
+    productos:   _productos,
+    proveedores: _provs,
   });
 </script>
 </body>

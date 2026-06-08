@@ -24,6 +24,7 @@
     <div class="header-title">
       <div class="header-sector">Vinos</div>
       <div class="header-user">Lucas Porro</div>
+      <div class="header-proveedores" id="header-proveedores" style="display:none"></div>
     </div>
 
     <div class="header-date">
@@ -87,10 +88,20 @@
 <script src="app.js"></script>
 <script>
   initEmailJS();
+
+  // Leer proveedores seleccionados desde index.html
+  const _sel = JSON.parse(localStorage.getItem('proveedores_seleccionados') || '{}');
+  const _provs = (_sel.sector === 'vinos' && _sel.proveedores?.length)
+    ? _sel.proveedores : null;
+  const _productos = _provs
+    ? PRODUCTOS_VINOS.filter(p => _provs.includes(p.proveedor))
+    : PRODUCTOS_VINOS;
+
   initConteoForm({
-    sector:    'vinos',
-    usuario:   'Lucas Porro',
-    productos: PRODUCTOS_VINOS,
+    sector:      'vinos',
+    usuario:     'Lucas Porro',
+    productos:   _productos,
+    proveedores: _provs,
   });
 </script>
 </body>

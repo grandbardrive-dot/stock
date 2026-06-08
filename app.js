@@ -30,7 +30,7 @@ function showToast(msg, ok = true) {
 }
 
 // ── initConteoForm ────────────────────────────────────────────
-function initConteoForm({ sector, usuario, productos }) {
+function initConteoForm({ sector, usuario, productos, proveedores }) {
   const listEl        = document.getElementById('product-list');
   const searchEl      = document.getElementById('buscador');
   const clearBtn      = document.getElementById('search-clear');
@@ -47,6 +47,17 @@ function initConteoForm({ sector, usuario, productos }) {
   // Estado: { sku → { depo1, local, depo2, obs } }
   let values = {};
   let query  = '';
+
+  // ── Proveedores seleccionados: mostrar en header ──
+  const provEl = document.getElementById('header-proveedores');
+  if (provEl && proveedores && proveedores.length) {
+    provEl.textContent = proveedores.length <= 3
+      ? proveedores.join(' · ')
+      : `${proveedores.length} proveedores seleccionados`;
+    provEl.style.display = 'block';
+  } else if (provEl) {
+    provEl.style.display = 'none';
+  }
 
   // ── Fecha ──
   const hoy = new Date();
@@ -341,10 +352,15 @@ function initConteoForm({ sector, usuario, productos }) {
 
     const totUnidades = conStock.reduce((s, p) => s + p.total, 0);
 
+    const provLine = proveedores && proveedores.length
+      ? `Proveedores: ${proveedores.join(', ')}`
+      : `Proveedores: Todos`;
+
     const message = [
       `Sector: ${sectorLabel}`,
       `Responsable: ${usuario}`,
       `Fecha: ${fecha}`,
+      provLine,
       `Productos con stock: ${conStock.length} de ${productos.length}`,
       `Total unidades: ${totUnidades}`,
       '',
@@ -378,6 +394,7 @@ function initConteoForm({ sector, usuario, productos }) {
       const dataRows = conStock.map(p => [
         p.sku,
         p.articulo,
+        p.proveedor,
         p.stock_sistema,
         p.depo1,
         p.local,
@@ -386,17 +403,25 @@ function initConteoForm({ sector, usuario, productos }) {
         p.total - p.stock_sistema,
       ]);
 
+      const provResumen = proveedores && proveedores.length
+        ? proveedores.join(', ')
+        : 'Todos';
+
       const wsData = [
-        ['SKU', 'Descripción', 'Stock Sistema', 'Depo 1', 'Local', 'Depo 2', 'Total', 'Diferencia'],
+        [`${sectorLabel} — ${usuario} — ${fecha}`],
+        [`Proveedores: ${provResumen}`],
+        [],   // fila vacía separadora
+        ['SKU', 'Descripción', 'Proveedor', 'Stock Sistema', 'Depo 1', 'Local', 'Depo 2', 'Total', 'Diferencia'],
         ...dataRows,
       ];
 
       const ws = XLSX.utils.aoa_to_sheet(wsData);
 
-      // Anchos de columna
+      // Anchos de columna (9 columnas: +Proveedor)
       ws['!cols'] = [
         { wch: 13 }, // SKU
-        { wch: 54 }, // Descripción
+        { wch: 50 }, // Descripción
+        { wch: 30 }, // Proveedor
         { wch: 14 }, // Stock Sistema
         { wch: 10 }, // Depo 1
         { wch: 10 }, // Local
@@ -405,27 +430,34 @@ function initConteoForm({ sector, usuario, productos }) {
         { wch: 12 }, // Diferencia
       ];
 
-      // Estilos con xlsx-js-style
+      // Estilos: título (fila 1), subtítulo (fila 2), header datos (fila 4)
+      const styleTitulo = {
+        font: { bold: true, sz: 13, color: { rgb: 'CBA86A' } },
+      };
+      const styleSubtitulo = {
+        font: { italic: true, color: { rgb: '8a8f9a' } },
+      };
       const styleHeader = {
         font:      { bold: true, color: { rgb: 'F1EBD6' } },
         fill:      { fgColor: { rgb: '1F447F' } },
         alignment: { horizontal: 'center' },
       };
-      const styleDiffNeg = {
-        font: { bold: true, color: { rgb: 'C0392B' } },
-      };
-      const styleDiffPos = {
-        font: { bold: true, color: { rgb: '2E8B57' } },
-      };
+      const styleDiffNeg = { font: { bold: true, color: { rgb: 'C0392B' } } };
+      const styleDiffPos = { font: { bold: true, color: { rgb: '2E8B57' } } };
 
-      ['A1','B1','C1','D1','E1','F1','G1','H1'].forEach(ref => {
+      if (ws['A1']) ws['A1'].s = styleTitulo;
+      if (ws['A2']) ws['A2'].s = styleSubtitulo;
+
+      // Header de datos en fila 4 (A4:I4)
+      ['A4','B4','C4','D4','E4','F4','G4','H4','I4'].forEach(ref => {
         if (ws[ref]) ws[ref].s = styleHeader;
       });
 
+      // Columna I (Diferencia) = índice 8, filas desde 5
       conStock.forEach((p, i) => {
         const diff    = p.total - p.stock_sistema;
-        const rowNum  = i + 2; // fila 1 es header
-        const cellRef = `H${rowNum}`;
+        const rowNum  = i + 5; // 3 filas meta + 1 header = fila 5 en adelante
+        const cellRef = `I${rowNum}`;
         if (ws[cellRef]) {
           ws[cellRef].s = diff < 0 ? styleDiffNeg : diff > 0 ? styleDiffPos : {};
         }
