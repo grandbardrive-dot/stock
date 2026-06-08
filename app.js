@@ -44,6 +44,9 @@ function initConteoForm({ sector, usuario, productos, proveedores }) {
 
   const DRAFT_KEY = 'grandbar_draft_' + sector;
 
+  // Excluir productos "Promo ..." del formulario
+  productos = productos.filter(p => !p.articulo.startsWith('Promo '));
+
   // Estado: { sku → { depo1, local, depo2, obs } }
   let values = {};
   let query  = '';
