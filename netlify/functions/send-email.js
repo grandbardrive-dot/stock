@@ -2,7 +2,7 @@
 // Intermediario entre el browser y la API de Resend.
 // La API key vive en variables de entorno de Netlify, nunca en el código.
 
-const RESEND_FROM = 'Stock GrandBar <onboarding@resend.dev>';
+const RESEND_FROM = 'Stock GrandBar <stock@grandbar.com.ar>';
 const RESEND_TO   = [
   'jlemos@grandbar.com.ar',
   'compras@grandbar.com.ar',
