@@ -94,9 +94,10 @@
   const _sel = JSON.parse(localStorage.getItem('proveedores_seleccionados') || '{}');
   const _provs = (_sel.sector === 'vinos' && _sel.proveedores?.length)
     ? _sel.proveedores : null;
-  const _productos = _provs
+  const _base = _provs
     ? PRODUCTOS_VINOS.filter(p => _provs.includes(p.proveedor))
     : PRODUCTOS_VINOS;
+  const _productos = _base.filter(p => !p.articulo.startsWith('Promo '));
 
   initConteoForm({
     sector:      'vinos',
