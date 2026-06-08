@@ -39,6 +39,9 @@ function initConteoForm({ sector, usuario, productos, proveedores }) {
 
   const DRAFT_KEY = 'grandbar_draft_' + sector;
 
+  // Guardar array completo (incluye Promos) para cruzar stock en el Excel
+  const todosLosProductos = productos;
+
   // Excluir productos "Promo ..." del formulario
   productos = productos.filter(p => !p.articulo.startsWith('Promo '));
 
@@ -341,15 +344,24 @@ function initConteoForm({ sector, usuario, productos, proveedores }) {
     // Overrides de stock sistema cargados desde Córdoba Software
     const stockOverrides = JSON.parse(localStorage.getItem('grandbar_stock_sistema') || '{}');
 
-    // Mapa de stock promo: { "Chandon Brut x 750ml" → stock_sistema del "Promo Chandon Brut x 750ml" }
-    // Se construye sobre TODOS los productos del sector (no solo los filtrados por proveedor)
+    // Mapa de stock promo: { "Alfa Crux Corte Uco x 750ml" → stock del "Promo Alfa Crux Corte Uco x 750ml" }
+    // Usa todosLosProductos (incluye Promos, antes del filtro del formulario)
     const promoMap = {};
-    productos.forEach(p => {
+    todosLosProductos.forEach(p => {
       if (p.articulo.startsWith('Promo ')) {
         const baseName = p.articulo.slice(6); // quitar "Promo "
         promoMap[baseName] = (stockOverrides[p.sku] !== undefined ? stockOverrides[p.sku] : p.stock_sistema) || 0;
       }
     });
+
+    // Debug — verificar que el mapa se construyó correctamente
+    const promoEntries = Object.entries(promoMap).filter(([, v]) => v > 0);
+    console.log(`[Promo] ${Object.keys(promoMap).length} promos en el mapa, ${promoEntries.length} con stock > 0`);
+    const ejemplo = promoMap['Alfa Crux Corte Uco x 750ml'];
+    console.log(`[Promo] "Alfa Crux Corte Uco x 750ml" → stock promo: ${ejemplo ?? 'NO ENCONTRADO'}`);
+    if (promoEntries.length > 0) {
+      console.log('[Promo] Primeros 5 con stock:', promoEntries.slice(0, 5));
+    }
 
     // Construir lista completa — excluir productos "Promo ..."
     const conStock = productos
