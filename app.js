@@ -354,14 +354,39 @@ function initConteoForm({ sector, usuario, productos, proveedores }) {
       }
     });
 
-    // Debug — verificar que el mapa se construyó correctamente
-    const promoEntries = Object.entries(promoMap).filter(([, v]) => v > 0);
-    console.log(`[Promo] ${Object.keys(promoMap).length} promos en el mapa, ${promoEntries.length} con stock > 0`);
-    const ejemplo = promoMap['Alfa Crux Corte Uco x 750ml'];
-    console.log(`[Promo] "Alfa Crux Corte Uco x 750ml" → stock promo: ${ejemplo ?? 'NO ENCONTRADO'}`);
-    if (promoEntries.length > 0) {
-      console.log('[Promo] Primeros 5 con stock:', promoEntries.slice(0, 5));
+    // ── DEBUG: verificar promoMap ──────────────────────────────
+    console.group('[DEBUG Promo]');
+
+    // 1. Array completo antes de filtrar
+    console.log('1. todosLosProductos.length:', todosLosProductos.length);
+    const promosEnTodos = todosLosProductos.filter(p => p.articulo.startsWith('Promo '));
+    console.log('   De esos, con "Promo ": ', promosEnTodos.length);
+    console.log('   Primeros 3 Promos:', promosEnTodos.slice(0, 3).map(p =>
+      `${p.sku} | ${p.articulo} | stock_sistema=${p.stock_sistema}`
+    ));
+
+    // 2. Caso específico: Alfa Crux Corte Uco
+    const alfaPromo = todosLosProductos.find(p => p.articulo === 'Promo Alfa Crux Corte Uco x 750ml');
+    const alfaBase  = todosLosProductos.find(p => p.articulo === 'Alfa Crux Corte Uco x 750ml');
+    console.log('2. "Alfa Crux Corte Uco x 750ml":',
+      alfaBase  ? `SKU=${alfaBase.sku}, stock_sistema=${alfaBase.stock_sistema}` : 'NO ENCONTRADO'
+    );
+    console.log('   "Promo Alfa Crux Corte Uco x 750ml":',
+      alfaPromo ? `SKU=${alfaPromo.sku}, stock_sistema=${alfaPromo.stock_sistema}` : 'NO ENCONTRADO'
+    );
+
+    // 3. promoMap resultante
+    const promoEntries = Object.entries(promoMap);
+    const conStock     = promoEntries.filter(([, v]) => v > 0);
+    console.log('3. promoMap — total entradas:', promoEntries.length, '| con stock > 0:', conStock.length);
+    console.log('   "Alfa Crux Corte Uco x 750ml" en promoMap:',
+      promoMap['Alfa Crux Corte Uco x 750ml'] ?? 'AUSENTE'
+    );
+    if (conStock.length > 0) {
+      console.log('   Primeros 5 con stock > 0:', conStock.slice(0, 5));
     }
+
+    console.groupEnd();
 
     // Construir lista completa — excluir productos "Promo ..."
     const conStock = productos

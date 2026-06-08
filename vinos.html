@@ -99,7 +99,8 @@
   const _baseFiltrado = _lineas
     ? _base.filter(p => _lineas.includes(p.sku.slice(0, 6)))
     : _base;
-  const _productos = _baseFiltrado.filter(p => !p.articulo.startsWith('Promo '));
+  // NO filtrar Promos aquí — initConteoForm lo hace internamente y los necesita para el promoMap
+  const _productos = _baseFiltrado;
 
   initConteoForm({
     sector:      'vinos',
