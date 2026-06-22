@@ -1,5 +1,5 @@
 // productos.js — generado automáticamente por import-cordoba.js
-// Fuente: Hoja de cálculo sin título.xlsx  (22/6/2026, 12:27:19)
+// Fuente: Hoja de cálculo sin título.xlsx  (22/6/2026, 12:28:33)
 // VINOS: 3988 productos | SPIRITS: 2528 productos
 
 const PRODUCTOS_VINOS = [
