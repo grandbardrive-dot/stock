@@ -472,7 +472,8 @@
         // Robustez: buscar la primera fila donde col[0] tiene 8 dígitos
         let startRow = 4; // default
         for (let i = 0; i < Math.min(10, rows.length); i++) {
-          if (/^\d{8}\s*$/.test(String(rows[i][0]))) { startRow = i; break; }
+          const cell = String(rows[i][0]).trim().replace(/\D/g, '');
+          if (cell.length >= 7) { startRow = i; break; }
         }
 
         parseMsg.textContent = 'Cruzando SKUs...';
@@ -484,11 +485,11 @@
         let matchSpirits = 0;
 
         rows.slice(startRow).forEach(row => {
-          const skuRaw = String(row[0]).trim();
+          const skuRaw = String(row[0]).trim().replace(/\D/g, '').padStart(8, '0');
           if (!/^\d{8}$/.test(skuRaw)) return; // saltar filas sin SKU válido
 
           totalFilaValidas++;
-          const stock = Number(row[2]) || 0;
+          const stock = parseFloat(String(row[2]).replace(',', '.')) || 0;
 
           if (skuIndex[skuRaw] === 'vinos') {
             nuevosStocks[skuRaw] = stock;
