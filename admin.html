@@ -358,6 +358,10 @@
 <script src="app.js"></script>
 <script>
 (function () {
+  // ── Supabase ────────────────────────────────────────────────
+  const SUPA_URL = 'https://owpsfpifeonwkvwxqovk.supabase.co';
+  const SUPA_KEY = 'sb_publishable_FiMoqDt6G15dP9vQOs3n6A_tzULT8YU';
+
   // ── Claves de localStorage ──────────────────────────────────
   const LS_STOCK    = 'grandbar_stock_sistema';
   const LS_FECHA    = 'grandbar_stock_sistema_fecha';
@@ -447,7 +451,7 @@
   });
 
   // ── Procesar archivo Excel ─────────────────────────────────
-  function procesarArchivo(file) {
+  async function procesarArchivo(file) {
     uploadSubl.textContent    = file.name;
     resultadoEl.style.display = 'none';
     parseProgress.style.display = 'flex';
@@ -455,7 +459,7 @@
 
     const reader = new FileReader();
 
-    reader.onload = function (e) {
+    reader.onload = async function (e) {
       try {
         parseMsg.textContent = 'Procesando filas...';
 
@@ -499,11 +503,36 @@
 
         parseProgress.style.display = 'none';
 
-        // Guardar en localStorage
+        // Guardar en localStorage (este dispositivo)
         const ahora = new Date().toISOString();
         localStorage.setItem(LS_STOCK,   JSON.stringify(nuevosStocks));
         localStorage.setItem(LS_FECHA,   ahora);
         localStorage.setItem(LS_ARCHIVO, file.name);
+
+        // Subir a Supabase (todos los dispositivos)
+        parseProgress.style.display = 'flex';
+        parseMsg.textContent = 'Sincronizando con servidor...';
+        try {
+          const rows  = Object.entries(nuevosStocks).map(([sku, stock]) => ({ sku, stock }));
+          const BATCH = 500;
+          for (let i = 0; i < rows.length; i += BATCH) {
+            const r = await fetch(`${SUPA_URL}/rest/v1/stock_sistema`, {
+              method: 'POST',
+              headers: {
+                'apikey':        SUPA_KEY,
+                'Authorization': `Bearer ${SUPA_KEY}`,
+                'Content-Type':  'application/json',
+                'Prefer':        'resolution=merge-duplicates',
+              },
+              body: JSON.stringify(rows.slice(i, i + BATCH)),
+            });
+            if (!r.ok) throw new Error(await r.text());
+          }
+        } catch (e) {
+          console.error('Error Supabase:', e);
+          showToast('Stock guardado localmente — error al sincronizar con servidor', false);
+        }
+        parseProgress.style.display = 'none';
 
         renderEstado();
         mostrarResultado(file.name, totalFilaValidas, matchVinos, matchSpirits, noEncontrados);

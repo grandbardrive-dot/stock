@@ -87,6 +87,27 @@
 <script src="productos.js"></script>
 <script src="app.js"></script>
 <script>
+(async () => {
+  const SUPA_URL = 'https://owpsfpifeonwkvwxqovk.supabase.co';
+  const SUPA_KEY = 'sb_publishable_FiMoqDt6G15dP9vQOs3n6A_tzULT8YU';
+
+  // Sincronizar stock desde Supabase antes de iniciar el formulario
+  try {
+    const res = await fetch(, {
+      headers: { 'apikey': SUPA_KEY, 'Authorization':  },
+    });
+    if (res.ok) {
+      const rows = await res.json();
+      if (rows.length > 0) {
+        const stockMap = {};
+        rows.forEach(r => { stockMap[r.sku] = r.stock; });
+        localStorage.setItem('grandbar_stock_sistema', JSON.stringify(stockMap));
+        localStorage.setItem('grandbar_stock_sistema_fecha', new Date().toISOString());
+      }
+    }
+  } catch (e) {
+    console.warn('Sin conexión — usando stock local:', e);
+  }
 
   // Leer proveedores seleccionados desde index.html
   const _sel = JSON.parse(localStorage.getItem('proveedores_seleccionados') || '{}');
@@ -108,6 +129,7 @@
     productos:   _productos,
     proveedores: _provs,
   });
+})();
 </script>
 </body>
 </html>
