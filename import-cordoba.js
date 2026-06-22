@@ -73,7 +73,7 @@ let omitidos  = 0;
 
 rows.slice(startRow).forEach(row => {
   const skuRaw  = String(row[0]).trim().replace(/\D/g, '').padStart(8, '0');
-  const articulo = String(row[1]).trim();
+  const articulo = String(row[1]).trim().replace(/`/g, "'");
   const stock_sistema = parseFloat(String(row[2]).replace(',', '.')) || 0;
 
   if (!/^\d{8}$/.test(skuRaw) || !articulo) { omitidos++; return; }

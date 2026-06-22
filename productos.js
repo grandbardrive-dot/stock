@@ -1,5 +1,5 @@
 // productos.js — generado automáticamente por import-cordoba.js
-// Fuente: Hoja de cálculo sin título.xlsx  (22/6/2026, 12:01:22)
+// Fuente: Hoja de cálculo sin título.xlsx  (22/6/2026, 12:27:19)
 // VINOS: 3988 productos | SPIRITS: 2528 productos
 
 const PRODUCTOS_VINOS = [
@@ -5233,7 +5233,7 @@ const PRODUCTOS_SPIRITS = [
   { sku: "02180506"    , proveedor: "Premier"                                         , articulo: "Jim Beam Bourbon Black x 750 ml"                           , stock_sistema: 0 },
   { sku: "02180507"    , proveedor: "Premier"                                         , articulo: "Jim Beam Bourbon Honey x 750ml"                            , stock_sistema: 15 },
   { sku: "02180508"    , proveedor: "Premier"                                         , articulo: "Jim Beam Bourbon White x 750 ml"                           , stock_sistema: 21 },
-  { sku: "02180509"    , proveedor: "Premier"                                         , articulo: "Maker`s Mark Bourbon x 750ml"                              , stock_sistema: 33 },
+  { sku: "02180509"    , proveedor: "Premier"                                         , articulo: "Maker's Mark Bourbon x 750ml"                              , stock_sistema: 33 },
   { sku: "02180510"    , proveedor: "Premier"                                         , articulo: "Whisky Tullamore Dew x 750 ml"                             , stock_sistema: 0 },
   { sku: "02180513"    , proveedor: "Premier"                                         , articulo: "Jim Beam Bourbon White x 1lt."                             , stock_sistema: 0 },
   { sku: "02180514"    , proveedor: "Premier"                                         , articulo: "Whisky The Balvenie 12 años x 700ml"                       , stock_sistema: 0 },
