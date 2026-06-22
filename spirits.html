@@ -93,8 +93,8 @@
 
   // Sincronizar stock desde Supabase antes de iniciar el formulario
   try {
-    const res = await fetch(, {
-      headers: { 'apikey': SUPA_KEY, 'Authorization':  },
+    const res = await fetch(SUPA_URL + '/rest/v1/stock_sistema?select=sku,stock', {
+      headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY },
     });
     if (res.ok) {
       const rows = await res.json();
