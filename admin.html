@@ -514,9 +514,11 @@
         parseProgress.style.display = 'flex';
         parseMsg.textContent = 'Sincronizando con servidor...';
         try {
-          const rows  = Object.entries(nuevosStocks).map(([sku, stock]) => ({ sku, stock }));
+          const supaRows = Object.entries(nuevosStocks).map(([sku, stock]) => ({ sku, stock: Math.round(stock) }));
           const BATCH = 500;
-          for (let i = 0; i < rows.length; i += BATCH) {
+          let batchesOk = 0;
+          for (let i = 0; i < supaRows.length; i += BATCH) {
+            parseMsg.textContent = `Sincronizando… batch ${Math.floor(i/BATCH)+1} de ${Math.ceil(supaRows.length/BATCH)}`;
             const r = await fetch(`${SUPA_URL}/rest/v1/stock_sistema`, {
               method: 'POST',
               headers: {
@@ -525,13 +527,19 @@
                 'Content-Type':  'application/json',
                 'Prefer':        'resolution=merge-duplicates',
               },
-              body: JSON.stringify(rows.slice(i, i + BATCH)),
+              body: JSON.stringify(supaRows.slice(i, i + BATCH)),
             });
-            if (!r.ok) throw new Error(await r.text());
+            if (!r.ok) {
+              const errText = await r.text();
+              console.error('Error Supabase batch', Math.floor(i/BATCH)+1, ':', errText);
+              throw new Error(`Batch ${Math.floor(i/BATCH)+1} falló: ${errText}`);
+            }
+            batchesOk++;
           }
+          console.log('Supabase: ' + batchesOk + ' batches OK, ' + supaRows.length + ' filas');
         } catch (e) {
           console.error('Error Supabase:', e);
-          showToast('Stock guardado localmente — error al sincronizar con servidor', false);
+          showToast('Error al sincronizar con servidor: ' + e.message, false);
         }
         parseProgress.style.display = 'none';
 
