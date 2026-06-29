@@ -49,6 +49,14 @@ function initConteoForm({ sector, usuario, productos, proveedores }) {
   let values = {};
   let query  = '';
 
+  // ── DEBUG stock sistema ──
+  const _dbgOverrides = JSON.parse(localStorage.getItem('grandbar_stock_sistema') || '{}');
+  const _dbgSku = '02060101';
+  console.log('[DEBUG stock] grandbar_stock_sistema keys:', Object.keys(_dbgOverrides).length);
+  console.log('[DEBUG stock] SKU ' + _dbgSku + ' en localStorage:', _dbgOverrides[_dbgSku] ?? 'AUSENTE');
+  const _dbgProd = productos.find(p => p.sku === _dbgSku);
+  console.log('[DEBUG stock] SKU ' + _dbgSku + ' en productos.js stock_sistema:', _dbgProd ? _dbgProd.stock_sistema : 'NO ENCONTRADO EN ARRAY');
+
   // ── Fecha de última actualización del stock sistema ──
   const stockFechaEl = document.getElementById('stock-update-date');
   if (stockFechaEl) {
