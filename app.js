@@ -56,6 +56,9 @@ function initConteoForm({ sector, usuario, productos, proveedores }) {
   console.log('[DEBUG stock] SKU ' + _dbgSku + ' en localStorage:', _dbgOverrides[_dbgSku] ?? 'AUSENTE');
   const _dbgProd = productos.find(p => p.sku === _dbgSku);
   console.log('[DEBUG stock] SKU ' + _dbgSku + ' en productos.js stock_sistema:', _dbgProd ? _dbgProd.stock_sistema : 'NO ENCONTRADO EN ARRAY');
+  const _dbgKeys0206 = Object.keys(_dbgOverrides).filter(k => k.startsWith('0206')).slice(0, 10);
+  console.log('[DEBUG stock] Keys 0206*:', _dbgKeys0206.length > 0 ? _dbgKeys0206.join(', ') : 'NINGUNA');
+  console.log('[DEBUG stock] Primeros 5 keys:', Object.keys(_dbgOverrides).slice(0, 5).join(', '));
 
   // ── Fecha de última actualización del stock sistema ──
   const stockFechaEl = document.getElementById('stock-update-date');
