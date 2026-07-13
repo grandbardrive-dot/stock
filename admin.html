@@ -485,7 +485,8 @@
         let matchSpirits = 0;
 
         rows.slice(startRow).forEach(row => {
-          const skuRaw = String(row[0]).trim().replace(/\D/g, '').padStart(8, '0');
+          const _d = String(row[0]).trim().replace(/\D/g, '');
+          const skuRaw = _d.length === 6 ? _d + '00' : _d.padStart(8, '0');
           if (!/^\d{8}$/.test(skuRaw)) return; // saltar filas sin SKU válido
 
           totalFilaValidas++;

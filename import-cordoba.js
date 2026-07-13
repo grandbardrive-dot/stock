@@ -72,7 +72,8 @@ const spirits = [];
 let omitidos  = 0;
 
 rows.slice(startRow).forEach(row => {
-  const skuRaw  = String(row[0]).trim().replace(/\D/g, '').padStart(8, '0');
+  const _digits = String(row[0]).trim().replace(/\D/g, '');
+  const skuRaw  = _digits.length === 6 ? _digits + '00' : _digits.padStart(8, '0');
   const articulo = String(row[1]).trim().replace(/`/g, "'");
   const stock_sistema = parseFloat(String(row[2]).replace(',', '.')) || 0;
 
