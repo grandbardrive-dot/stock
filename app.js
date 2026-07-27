@@ -25,7 +25,7 @@ function showToast(msg, ok = true) {
 }
 
 // ── initConteoForm ────────────────────────────────────────────
-function initConteoForm({ sector, usuario, productos, proveedores }) {
+function initConteoForm({ sector, usuario, productos, proveedores, supaUrl, supaKey }) {
   const listEl        = document.getElementById('product-list');
   const searchEl      = document.getElementById('buscador');
   const clearBtn      = document.getElementById('search-clear');
@@ -352,8 +352,27 @@ function initConteoForm({ sector, usuario, productos, proveedores }) {
     const sectorLabel = sector === 'vinos' ? 'Vinos' : 'Spirits y Gaseosas';
     const sectorSlug  = sector === 'vinos' ? 'vinos' : 'spirits';
 
-    // Overrides de stock sistema cargados desde Córdoba Software
-    const stockOverrides = JSON.parse(localStorage.getItem('grandbar_stock_sistema') || '{}');
+    // Fetch fresco de Supabase al momento de enviar (no depende de cuándo cargó la página)
+    let stockOverrides = JSON.parse(localStorage.getItem('grandbar_stock_sistema') || '{}');
+    if (supaUrl && supaKey) {
+      try {
+        const sr = await fetch(supaUrl + '/rest/v1/stock_sistema?select=sku,stock&limit=10000', {
+          headers: { 'apikey': supaKey, 'Authorization': 'Bearer ' + supaKey },
+        });
+        if (sr.ok) {
+          const srows = await sr.json();
+          if (srows.length > 0) {
+            const fresh = {};
+            srows.forEach(r => { fresh[r.sku] = r.stock; });
+            localStorage.setItem('grandbar_stock_sistema', JSON.stringify(fresh));
+            localStorage.setItem('grandbar_stock_sistema_fecha', new Date().toISOString());
+            stockOverrides = fresh;
+          }
+        }
+      } catch (e) {
+        console.warn('Sin conexión al enviar — usando stock local:', e);
+      }
+    }
 
     // Mapa de stock promo: { "Alfa Crux Corte Uco x 750ml" → stock del "Promo Alfa Crux Corte Uco x 750ml" }
     // Usa todosLosProductos (incluye Promos, antes del filtro del formulario)
