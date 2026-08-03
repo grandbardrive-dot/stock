@@ -205,8 +205,19 @@ async function sincronizar() {
     );
   }
 
-  // 5) Actualizar Supabase (upsert en batches de 500)
-  console.log('Paso 4 — Upsert en Supabase stock_sistema');
+  // 5) Actualizar Supabase: primero BORRAR todo, luego INSERT limpio
+  // Así los artículos con stock=0 que AIKON no devuelve quedan en 0 (no con dato viejo)
+  console.log('Paso 4 — Limpiando stock_sistema en Supabase');
+  const delRes = await sb('stock_sistema?sku=not.is.null', {
+    method: 'DELETE',
+    headers: { Prefer: 'return=minimal' },
+  });
+  if (!delRes.ok) {
+    const err = await delRes.text();
+    throw new Error(`Error al limpiar stock_sistema: ${err.slice(0, 200)}`);
+  }
+
+  console.log('Paso 5 — Insertando datos frescos en Supabase');
   const rows   = Object.entries(stockMap).map(([sku, stock]) => ({ sku, stock: Math.round(stock) }));
   const BATCH  = 500;
   let batchesOk = 0;

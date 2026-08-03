@@ -374,13 +374,17 @@ function initConteoForm({ sector, usuario, productos, proveedores, supaUrl, supa
       }
     }
 
+    // Si stockOverrides tiene datos (de Supabase o localStorage), los SKUs ausentes son 0.
+    // Solo usamos p.stock_sistema de productos.js si nunca hubo ningún sync.
+    const hasSync = Object.keys(stockOverrides).length > 0;
+
     // Mapa de stock promo: { "Alfa Crux Corte Uco x 750ml" → stock del "Promo Alfa Crux Corte Uco x 750ml" }
     // Usa todosLosProductos (incluye Promos, antes del filtro del formulario)
     const promoMap = {};
     todosLosProductos.forEach(p => {
       if (p.articulo.startsWith('Promo ')) {
         const baseName = p.articulo.slice(6); // quitar "Promo "
-        promoMap[baseName] = (stockOverrides[p.sku] !== undefined ? stockOverrides[p.sku] : p.stock_sistema) || 0;
+        promoMap[baseName] = hasSync ? (stockOverrides[p.sku] ?? 0) : (p.stock_sistema || 0);
       }
     });
 
@@ -427,7 +431,7 @@ function initConteoForm({ sector, usuario, productos, proveedores, supaUrl, supa
         const local = parseInt(v.local) || 0;
         const depo2 = parseInt(v.depo2) || 0;
         const total = depo1 + local + depo2;
-        const stock_sistema = (stockOverrides[p.sku] !== undefined ? stockOverrides[p.sku] : p.stock_sistema) || 0;
+        const stock_sistema = hasSync ? (stockOverrides[p.sku] ?? 0) : (p.stock_sistema || 0);
         const promo = promoMap[p.articulo] || 0;
         return {
           sku: p.sku,
