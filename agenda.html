@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#1F447F">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Agenda — Grandbar Stock</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&family=Barlow+Condensed:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ── AGENDA-SPECIFIC STYLES ── */
+
+    body { background: #111; color: #e8e0d0; }
+
+    .agenda-header {
+      position: sticky; top: 0; z-index: 100;
+      background: #1a1a1a;
+      border-bottom: 2px solid #c9a84c;
+      padding: env(safe-area-inset-top, 0) 0 0;
+    }
+    .agenda-header-inner {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 16px 12px;
+    }
+    .back-btn {
+      background: none; border: none; color: #c9a84c;
+      font-size: 28px; line-height: 1; cursor: pointer;
+      padding: 0 6px 0 0; flex-shrink: 0;
+    }
+    .agenda-title-block { flex: 1; }
+    .agenda-title-block h1 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 22px; font-weight: 800; text-transform: uppercase;
+      letter-spacing: 1px; color: #fff; margin: 0 0 2px;
+    }
+    .agenda-subtitle {
+      font-size: 12px; color: #a09070; letter-spacing: .5px;
+    }
+
+    /* Config row */
+    .config-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 16px 12px;
+      border-bottom: 1px solid #2a2a2a;
+    }
+    .config-label { font-size: 12px; color: #a09070; white-space: nowrap; }
+    .config-seg {
+      display: flex; border: 1px solid #333; border-radius: 6px; overflow: hidden;
+    }
+    .config-seg button {
+      background: #1e1e1e; border: none; color: #c9a84c;
+      padding: 5px 12px; font-size: 13px; cursor: pointer;
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 600;
+      transition: background .15s, color .15s;
+    }
+    .config-seg button.active { background: #c9a84c; color: #111; }
+    .config-seg button + button { border-left: 1px solid #333; }
+
+    .reset-btn {
+      margin-left: auto;
+      background: none; border: 1px solid #3a2a2a; color: #8a6060;
+      padding: 5px 10px; font-size: 11px; border-radius: 6px;
+      cursor: pointer; font-family: 'Barlow Condensed', sans-serif; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .5px;
+      transition: border-color .15s, color .15s;
+    }
+    .reset-btn:hover { border-color: #c04040; color: #c04040; }
+
+    /* Stats bar */
+    .stats-bar {
+      display: flex; gap: 0;
+      background: #161616;
+      border-bottom: 1px solid #222;
+    }
+    .stat-item {
+      flex: 1; text-align: center; padding: 10px 6px;
+      border-right: 1px solid #222;
+    }
+    .stat-item:last-child { border-right: none; }
+    .stat-num {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 22px; font-weight: 800; color: #c9a84c;
+      line-height: 1;
+    }
+    .stat-label { font-size: 10px; color: #666; text-transform: uppercase; margin-top: 2px; }
+
+    /* Main content */
+    .agenda-body { padding: 12px 12px 80px; }
+
+    /* Section headers */
+    .section-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 13px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1px; color: #c9a84c;
+      margin: 18px 0 8px 4px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .section-title::after {
+      content: ''; flex: 1; height: 1px; background: #2a2a2a;
+    }
+
+    /* Session card */
+    .session-card {
+      background: #1a1a1a;
+      border: 1px solid #252525;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      overflow: hidden;
+      transition: border-color .2s;
+    }
+    .session-card.done { opacity: .55; }
+    .session-card.next {
+      border-color: #c9a84c;
+      box-shadow: 0 0 0 1px #c9a84c22;
+    }
+    .session-card.overdue { border-color: #c06040; }
+
+    .session-header {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 14px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .session-num {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 28px; font-weight: 800; color: #333;
+      min-width: 36px; text-align: center; line-height: 1;
+      transition: color .2s;
+    }
+    .session-card.next .session-num { color: #c9a84c; }
+    .session-card.done .session-num { color: #2a2a2a; }
+
+    .session-info { flex: 1; }
+    .session-date {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 17px; font-weight: 700; color: #ddd; letter-spacing: .3px;
+    }
+    .session-card.next .session-date { color: #fff; }
+    .session-meta {
+      font-size: 11px; color: #666; margin-top: 2px;
+    }
+    .session-badge {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      padding: 3px 8px; border-radius: 20px; letter-spacing: .5px;
+    }
+    .badge-next { background: #c9a84c22; color: #c9a84c; border: 1px solid #c9a84c44; }
+    .badge-done { background: #1a2a1a; color: #4a8a4a; border: 1px solid #2a3a2a; }
+    .badge-overdue { background: #2a1a1a; color: #c06040; border: 1px solid #3a2a2a; }
+
+    .session-toggle {
+      color: #444; font-size: 18px; transition: transform .2s;
+    }
+    .session-card.open .session-toggle { transform: rotate(180deg); }
+
+    /* Session body (bodegas list) */
+    .session-body {
+      display: none;
+      border-top: 1px solid #222;
+      padding: 12px 14px;
+    }
+    .session-card.open .session-body { display: block; }
+
+    .bodega-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid #1e1e1e;
+    }
+    .bodega-item:last-child { border-bottom: none; }
+    .bodega-name {
+      flex: 1;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 15px; font-weight: 600; color: #ccc;
+      text-transform: uppercase; letter-spacing: .3px;
+    }
+    .bodega-count {
+      font-size: 11px; color: #666; white-space: nowrap;
+    }
+    .bodega-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #333; flex-shrink: 0;
+    }
+
+    /* Mark done button */
+    .mark-done-wrap {
+      padding: 10px 14px 14px;
+      border-top: 1px solid #1e1e1e;
+    }
+    .mark-done-btn {
+      width: 100%;
+      background: none; border: 1px solid #2a3a2a; color: #4a8a4a;
+      padding: 10px; border-radius: 8px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 14px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .5px; cursor: pointer;
+      transition: background .15s, border-color .15s;
+    }
+    .mark-done-btn:hover { background: #1a2a1a; border-color: #3a5a3a; }
+    .mark-done-btn.undo {
+      border-color: #2a2a3a; color: #6a6a9a;
+    }
+    .mark-done-btn.undo:hover { background: #1a1a2a; }
+
+    /* Progress footer */
+    .progress-footer {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: #1a1a1a;
+      border-top: 1px solid #c9a84c44;
+      padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0));
+      z-index: 50;
+    }
+    .progress-footer-row {
+      display: flex; justify-content: space-between;
+      font-size: 12px; color: #666; margin-bottom: 6px;
+    }
+    .progress-footer-bar {
+      height: 4px; background: #252525; border-radius: 2px; overflow: hidden;
+    }
+    .progress-footer-fill {
+      height: 100%; background: #c9a84c; border-radius: 2px;
+      transition: width .4s ease;
+    }
+
+    /* Nav link */
+    .nav-link {
+      display: inline-flex; align-items: center; gap: 6px;
+      text-decoration: none; color: #c9a84c;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 12px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header class="agenda-header">
+  <div class="agenda-header-inner">
+    <button class="back-btn" onclick="history.back()" aria-label="Volver">‹</button>
+    <div class="agenda-title-block">
+      <h1>Agenda de Stock</h1>
+      <div class="agenda-subtitle">Vinos · Solo lunes 9:00 – 12:00</div>
+    </div>
+  </div>
+
+  <!-- Config -->
+  <div class="config-row">
+    <span class="config-label">Bodegas por lunes:</span>
+    <div class="config-seg" id="seg-por-sesion">
+      <button onclick="setPorSesion(2)">2</button>
+      <button onclick="setPorSesion(3)" class="active">3</button>
+      <button onclick="setPorSesion(4)">4</button>
+      <button onclick="setPorSesion(5)">5</button>
+    </div>
+    <button class="reset-btn" onclick="confirmReset()">↺ Reiniciar</button>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-bar" id="stats-bar">
+    <div class="stat-item">
+      <div class="stat-num" id="stat-bodegas">54</div>
+      <div class="stat-label">Bodegas</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num" id="stat-sesiones">—</div>
+      <div class="stat-label">Lunes</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num" id="stat-meses">—</div>
+      <div class="stat-label">Meses aprox.</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num" id="stat-hechas">0</div>
+      <div class="stat-label">Completadas</div>
+    </div>
+  </div>
+</header>
+
+<!-- ── BODY ── -->
+<main class="agenda-body" id="agenda-body"></main>
+
+<!-- ── PROGRESS FOOTER ── -->
+<div class="progress-footer">
+  <div class="progress-footer-row">
+    <span id="footer-label">Cargando agenda…</span>
+    <span id="footer-pct">0%</span>
+  </div>
+  <div class="progress-footer-bar">
+    <div class="progress-footer-fill" id="footer-fill" style="width:0%"></div>
+  </div>
+</div>
+
+<script src="productos.js"></script>
+<script>
+// ── BODEGAS INACTIVAS (no hacer stock) ─────────────────────────
+const INACTIVAS = new Set([
+  'BODEGA ACHAVAL FERRER', 'BODEGA ALTOS LAS HORMIGAS', 'BODEGA AMALAYA',
+  'BODEGA BARBERIS', 'BODEGA BIANCHI', 'BODEGA CAVAS ROSELL BOHER',
+  'BODEGA CHAKANA', 'BODEGA CHAMAN', 'BODEGA CLOS DE LOS SIETE',
+  'BODEGA CORRAL DE PALOS', 'BODEGA CRUZAT', 'BODEGA CUVELIER DE LOS ANDES',
+  'BODEGA DIAMANDES', 'BODEGA DIAMANTES', 'BODEGA DOMAINE BOUSQUET',
+  'BODEGA DURIGUTTI', 'BODEGA EDUARDO VIDAL WINES', 'BODEGA EL EQUILIBRISTA WINES',
+  'BODEGA EL RELATOR', 'BODEGA ESCALA HUMANA', 'BODEGA ESMERALDA',
+  'BODEGA FINCA AGOSTINO', 'BODEGA FINCA BANDINI', 'BODEGA FINCA FLICHMAN',
+  'BODEGA FUEGO BLANCO', 'BODEGA LA IGNACIA', 'BODEGA LAMADRID',
+  'BODEGA LOS COROS', 'BODEGA LOS VALIENTES', 'BODEGA MARRASO',
+  'BODEGA MAURICIO LORCA', 'BODEGA MENDEL', 'BODEGA MONTEVIEJO',
+  'BODEGA MOSQUITA MUERTA', 'BODEGA MOULIN BLUE', 'BODEGA NORTON',
+  'BODEGA REVANCHA', 'BODEGA ROLLAND WINE', 'BODEGA SERGIO CASE',
+  'BODEGA SIETE LEGUAS', 'BODEGA TINTO NEGRO', 'BODEGA TRES 14',
+  'BODEGA TUPUN', 'BODEGA VIÑA LOS CHOCOS', 'BODEGA ZORZAL',
+]);
+
+// ── ESTADO ─────────────────────────────────────────────────────
+const LS_KEY     = 'grandbar_agenda_v1';
+const LS_CONFIG  = 'grandbar_agenda_cfg';
+
+let porSesion    = parseInt(localStorage.getItem(LS_CONFIG) || '3', 10);
+let doneSessions = new Set(JSON.parse(localStorage.getItem(LS_KEY) || '[]'));
+let schedule     = [];   // [{date, bodegas:[{name,count}]}, ...]
+
+// ── DATOS: extraer bodegas activas con conteo ──────────────────
+function buildActiveBodegas() {
+  const map = {};
+  (typeof PRODUCTOS_VINOS !== 'undefined' ? PRODUCTOS_VINOS : []).forEach(p => {
+    const prov = (p.proveedor || '').trim();
+    if (!prov || INACTIVAS.has(prov)) return;
+    map[prov] = (map[prov] || 0) + 1;
+  });
+  // sort descending by count
+  return Object.entries(map)
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count);
+}
+
+// ── ALGORITMO: distribución balanceada ─────────────────────────
+// Greedy: siempre asignar la bodega más grande a la sesión con menor carga acumulada
+function buildSchedule(bodegas, perSession) {
+  const nSessions = Math.ceil(bodegas.length / perSession);
+  const sessions  = Array.from({ length: nSessions }, () => ({ bodegas: [], total: 0 }));
+
+  bodegas.forEach(bodega => {
+    // encontrar sesión con menor total
+    let minIdx = 0;
+    sessions.forEach((s, i) => {
+      if (s.bodegas.length < perSession && s.total < sessions[minIdx].total) minIdx = i;
+      else if (s.bodegas.length >= perSession) { /* llena, ignorar */ }
+    });
+    // buscar primera sesión con espacio
+    let placed = false;
+    for (let i = 0; i < sessions.length; i++) {
+      if (sessions[i].bodegas.length < perSession) {
+        if (sessions[i].total <= sessions[minIdx].total || !placed) {
+          minIdx = i; placed = true; break;
+        }
+      }
+    }
+    // recalcular el mínimo correcto
+    let best = -1;
+    sessions.forEach((s, i) => {
+      if (s.bodegas.length < perSession) {
+        if (best === -1 || s.total < sessions[best].total) best = i;
+      }
+    });
+    if (best === -1) best = sessions.length - 1;
+    sessions[best].bodegas.push(bodega);
+    sessions[best].total += bodega.count;
+  });
+
+  return sessions;
+}
+
+// ── UTILIDAD: próximo lunes (o hoy si es lunes) ───────────────
+function nextMonday(from = new Date()) {
+  const d = new Date(from);
+  d.setHours(0, 0, 0, 0);
+  const dow = d.getDay(); // 0=Dom, 1=Lun
+  const diff = dow === 1 ? 0 : (8 - dow) % 7 || 7;
+  d.setDate(d.getDate() + diff);
+  return d;
+}
+
+function addWeeks(date, n) {
+  const d = new Date(date);
+  d.setDate(d.getDate() + n * 7);
+  return d;
+}
+
+function fmtDate(d) {
+  const DIAS = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                 'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  return `${DIAS[d.getDay()]} ${d.getDate()} de ${MESES[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+function dateKey(d) {
+  return d.toISOString().slice(0, 10);
+}
+
+// ── CONSTRUIR & RENDERIZAR ─────────────────────────────────────
+function build() {
+  const bodegas  = buildActiveBodegas();
+  const sessions = buildSchedule(bodegas, porSesion);
+  const firstMonday = nextMonday();
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  schedule = sessions.map((s, i) => {
+    const d = addWeeks(firstMonday, i);
+    return { date: d, key: dateKey(d), bodegas: s.bodegas, total: s.total };
+  });
+
+  // stats
+  document.getElementById('stat-bodegas').textContent  = bodegas.length;
+  document.getElementById('stat-sesiones').textContent = schedule.length;
+  const meses = (schedule.length / 4.33).toFixed(1);
+  document.getElementById('stat-meses').textContent    = meses;
+  updateStats();
+
+  // update segment buttons
+  document.querySelectorAll('#seg-por-sesion button').forEach(btn => {
+    btn.classList.toggle('active', parseInt(btn.textContent) === porSesion);
+  });
+
+  renderSchedule(today);
+}
+
+function updateStats() {
+  const done = schedule.filter(s => doneSessions.has(s.key)).length;
+  document.getElementById('stat-hechas').textContent = done;
+  const pct = schedule.length ? Math.round((done / schedule.length) * 100) : 0;
+  document.getElementById('footer-pct').textContent = pct + '%';
+  document.getElementById('footer-fill').style.width = pct + '%';
+  const remaining = schedule.length - done;
+  document.getElementById('footer-label').textContent =
+    done === 0
+      ? `${schedule.length} sesiones planeadas`
+      : done === schedule.length
+      ? '¡Ciclo completo! Reiniciá para el próximo.'
+      : `${done} completadas · ${remaining} restantes`;
+}
+
+function renderSchedule(today) {
+  const body = document.getElementById('agenda-body');
+  body.innerHTML = '';
+
+  // Find next upcoming session
+  const nextKey = schedule.find(s => !doneSessions.has(s.key) && s.date >= today)?.key;
+
+  // Group: done vs pending
+  const pending = schedule.filter(s => !doneSessions.has(s.key));
+  const done    = schedule.filter(s =>  doneSessions.has(s.key));
+
+  if (pending.length) {
+    const h = document.createElement('div');
+    h.className = 'section-title';
+    h.textContent = 'Próximas sesiones';
+    body.appendChild(h);
+    pending.forEach(s => body.appendChild(renderCard(s, today, nextKey)));
+  }
+
+  if (done.length) {
+    const h = document.createElement('div');
+    h.className = 'section-title';
+    h.textContent = 'Completadas';
+    body.appendChild(h);
+    done.forEach(s => body.appendChild(renderCard(s, today, nextKey)));
+  }
+}
+
+function renderCard(session, today, nextKey) {
+  const isDone    = doneSessions.has(session.key);
+  const isNext    = session.key === nextKey;
+  const isOverdue = !isDone && session.date < today;
+  const isOpen    = isNext; // auto-open next session
+
+  const card = document.createElement('div');
+  card.className = 'session-card' +
+    (isDone ? ' done' : '') +
+    (isNext ? ' next' : '') +
+    (isOverdue ? ' overdue' : '') +
+    (isOpen ? ' open' : '');
+  card.id = 'card-' + session.key;
+
+  // Status badge
+  let badge = '';
+  if (isNext)    badge = `<span class="session-badge badge-next">Próxima</span>`;
+  else if (isDone)    badge = `<span class="session-badge badge-done">✓ Hecha</span>`;
+  else if (isOverdue) badge = `<span class="session-badge badge-overdue">Vencida</span>`;
+
+  // Sesión número
+  const idx = schedule.findIndex(s => s.key === session.key) + 1;
+
+  card.innerHTML = `
+    <div class="session-header" onclick="toggleCard('${session.key}')">
+      <div class="session-num">${String(idx).padStart(2,'0')}</div>
+      <div class="session-info">
+        <div class="session-date">${fmtDate(session.date)}</div>
+        <div class="session-meta">${session.bodegas.length} bodegas · ${session.total} productos est.</div>
+      </div>
+      ${badge}
+      <div class="session-toggle">⌄</div>
+    </div>
+    <div class="session-body">
+      <div class="bodega-list">
+        ${session.bodegas.map(b => `
+          <div class="bodega-item">
+            <div class="bodega-dot"></div>
+            <div class="bodega-name">${b.name}</div>
+            <div class="bodega-count">${b.count} ítems</div>
+          </div>
+        `).join('')}
+      </div>
+      <div class="mark-done-wrap">
+        ${isDone
+          ? `<button class="mark-done-btn undo" onclick="toggleDone('${session.key}', false)">↩ Marcar como pendiente</button>`
+          : `<button class="mark-done-btn"       onclick="toggleDone('${session.key}', true)">✓ Marcar como realizada</button>`
+        }
+      </div>
+    </div>
+  `;
+  return card;
+}
+
+function toggleCard(key) {
+  const card = document.getElementById('card-' + key);
+  if (card) card.classList.toggle('open');
+}
+
+function toggleDone(key, done) {
+  if (done) doneSessions.add(key);
+  else      doneSessions.delete(key);
+  localStorage.setItem(LS_KEY, JSON.stringify([...doneSessions]));
+  updateStats();
+  const today = new Date(); today.setHours(0,0,0,0);
+  renderSchedule(today);
+}
+
+function setPorSesion(n) {
+  porSesion = n;
+  localStorage.setItem(LS_CONFIG, String(n));
+  build();
+}
+
+function confirmReset() {
+  if (confirm('¿Reiniciar el progreso de la agenda? Se perderán todas las sesiones marcadas como completadas.')) {
+    doneSessions.clear();
+    localStorage.removeItem(LS_KEY);
+    build();
+  }
+}
+
+// ── INIT ───────────────────────────────────────────────────────
+build();
+</script>
+</body>
+</html>
