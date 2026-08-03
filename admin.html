@@ -435,10 +435,15 @@
 
     try {
       syncMsg.textContent = 'Descargando stock actualizado...';
-      const res = await fetch('/.netlify/functions/sync-stock', { method: 'POST' });
-      const data = await res.json();
+      const res  = await fetch('/.netlify/functions/sync-stock', { method: 'POST' });
+      const text = await res.text();
 
       syncProgress.style.display = 'none';
+
+      let data = {};
+      try { data = JSON.parse(text); } catch {
+        throw new Error(`Respuesta inesperada del servidor (HTTP ${res.status}): ${text.slice(0, 200) || '(vacía)'}`);
+      }
 
       if (!res.ok || data.error) {
         throw new Error(data.error || `Error HTTP ${res.status}`);
