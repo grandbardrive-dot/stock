@@ -280,18 +280,48 @@
 
 <div class="admin-wrap">
 
-  <!-- ══ SECCIÓN: Actualizar Stock Sistema ══ -->
+  <!-- ══ SECCIÓN: Sincronizar desde Córdoba Software ══ -->
   <div class="admin-section">
-    <div class="admin-section-title">Actualizar Stock Sistema</div>
+    <div class="admin-section-title">Sincronizar desde Córdoba Software</div>
     <div class="admin-section-desc">
-      Subí el archivo exportado de Córdoba Software para actualizar
-      los valores de "Stock Sistema" que aparecen en el Excel de conteo.
+      Conecta directamente con el sistema y trae el stock actualizado automáticamente.
+      No hace falta exportar ni subir ningún archivo.
     </div>
 
     <!-- Estado actual -->
     <div class="estado-row" id="estado-row">
       <div class="estado-dot" id="estado-dot"></div>
       <div class="estado-texto" id="estado-texto">Cargando estado...</div>
+    </div>
+
+    <!-- Botón principal de sincronización -->
+    <button class="btn-admin btn-admin-primary" id="btn-sync-cordoba" style="margin-bottom: 1rem;">
+      ↓ Sincronizar desde Córdoba Software
+    </button>
+
+    <!-- Progreso de sincronización con API -->
+    <div class="parse-progress" id="sync-progress" style="display:none">
+      <div class="spinner"></div>
+      <span id="sync-msg">Conectando con Córdoba Software...</span>
+    </div>
+
+    <!-- Resultado de sincronización API -->
+    <div class="resultado" id="resultado-sync" style="display:none">
+      <div class="resultado-header">
+        <div class="resultado-icon" id="sync-res-icon">✅</div>
+        <div>
+          <div class="resultado-titulo" id="sync-res-titulo">Stock sincronizado</div>
+          <div class="resultado-subtitulo" id="sync-res-subtitulo"></div>
+        </div>
+      </div>
+      <div class="stat-grid" id="sync-stat-grid"></div>
+    </div>
+
+    <!-- Separador -->
+    <div style="display:flex;align-items:center;gap:0.75rem;margin:1.25rem 0 1rem">
+      <div style="flex:1;height:1px;background:var(--border)"></div>
+      <span style="font-size:0.7rem;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase">o subir Excel manualmente</span>
+      <div style="flex:1;height:1px;background:var(--border)"></div>
     </div>
 
     <!-- Info de formato -->
@@ -385,6 +415,99 @@
   const noEncToggle  = document.getElementById('no-enc-toggle');
   const noEncList    = document.getElementById('no-enc-list');
   const btnReset     = document.getElementById('btn-reset');
+
+  // ── Elementos del botón de sincronización directa ──────────
+  const btnSync      = document.getElementById('btn-sync-cordoba');
+  const syncProgress = document.getElementById('sync-progress');
+  const syncMsg      = document.getElementById('sync-msg');
+  const resultadoSync = document.getElementById('resultado-sync');
+  const syncResIcon   = document.getElementById('sync-res-icon');
+  const syncResTitulo = document.getElementById('sync-res-titulo');
+  const syncResSubt   = document.getElementById('sync-res-subtitulo');
+  const syncStatGrid  = document.getElementById('sync-stat-grid');
+
+  // ── Sincronización directa con Córdoba Software ─────────────
+  btnSync.addEventListener('click', async () => {
+    btnSync.disabled = true;
+    resultadoSync.style.display = 'none';
+    syncProgress.style.display  = 'flex';
+    syncMsg.textContent = 'Conectando con Córdoba Software...';
+
+    try {
+      syncMsg.textContent = 'Descargando stock actualizado...';
+      const res = await fetch('/.netlify/functions/sync-stock', { method: 'POST' });
+      const data = await res.json();
+
+      syncProgress.style.display = 'none';
+
+      if (!res.ok || data.error) {
+        throw new Error(data.error || `Error HTTP ${res.status}`);
+      }
+
+      // Guardar en localStorage (este dispositivo)
+      const ahora = data.timestamp || new Date().toISOString();
+      localStorage.setItem(LS_FECHA,   ahora);
+      localStorage.setItem(LS_ARCHIVO, 'Sincronizado desde Córdoba Software');
+
+      // El stock en Supabase ya lo actualizó la función del servidor.
+      // Actualizamos también el localStorage para que este dispositivo
+      // tenga el stock inmediatamente sin esperar la próxima carga.
+      syncMsg.textContent = 'Descargando al dispositivo...';
+      syncProgress.style.display = 'flex';
+      try {
+        const supaRes = await fetch(SUPA_URL + '/rest/v1/stock_sistema?select=sku,stock&limit=10000', {
+          headers: { apikey: SUPA_KEY, Authorization: 'Bearer ' + SUPA_KEY },
+        });
+        if (supaRes.ok) {
+          const rows = await supaRes.json();
+          const map  = {};
+          rows.forEach(r => { map[r.sku] = r.stock; });
+          localStorage.setItem(LS_STOCK, JSON.stringify(map));
+        }
+      } catch { /* no crítico — Supabase ya tiene los datos */ }
+      syncProgress.style.display = 'none';
+
+      renderEstado();
+      mostrarResultadoSync(data);
+      showToast(`Stock sincronizado — ${data.actualizados?.toLocaleString() ?? '?'} productos`);
+
+    } catch (e) {
+      syncProgress.style.display = 'none';
+      syncResIcon.textContent    = '⚠️';
+      syncResTitulo.textContent  = 'Error al sincronizar';
+      syncResSubt.textContent    = e.message;
+      syncStatGrid.innerHTML     = '';
+      resultadoSync.style.display = 'block';
+      showToast('Error: ' + e.message, false);
+    } finally {
+      btnSync.disabled = false;
+    }
+  });
+
+  function mostrarResultadoSync(data) {
+    syncResIcon.textContent   = '✅';
+    syncResTitulo.textContent = `${(data.actualizados || 0).toLocaleString()} productos sincronizados`;
+    const d = new Date(data.timestamp || Date.now());
+    syncResSubt.textContent   = d.toLocaleString('es-AR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+    syncStatGrid.innerHTML = `
+      <div class="stat-card">
+        <div class="stat-num">${(data.vinos || 0).toLocaleString()}</div>
+        <div class="stat-label">Vinos</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">${(data.spirits || 0).toLocaleString()}</div>
+        <div class="stat-label">Spirits</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">${(data.totalArticulos || 0).toLocaleString()}</div>
+        <div class="stat-label">Total artículos</div>
+      </div>
+      <div class="stat-card warn">
+        <div class="stat-num">${(data.omitidos || 0).toLocaleString()}</div>
+        <div class="stat-label">Omitidos</div>
+      </div>`;
+    resultadoSync.style.display = 'block';
+  }
 
   // ── Construir índice de SKUs conocidos ─────────────────────
   const skuIndex = {};

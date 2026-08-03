@@ -5,4 +5,8 @@
 [functions]
   node_bundler = "esbuild"
 
+# Sincronización automática diaria a las 7:00 AM Argentina (UTC-3 → 10:00 UTC)
+[functions."sync-stock"]
+  schedule = "0 10 * * *"
+
 # Sin redirects especiales — archivos estáticos se sirven directo
