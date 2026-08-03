@@ -352,26 +352,22 @@ function initConteoForm({ sector, usuario, productos, proveedores, supaUrl, supa
     const sectorLabel = sector === 'vinos' ? 'Vinos' : 'Spirits y Gaseosas';
     const sectorSlug  = sector === 'vinos' ? 'vinos' : 'spirits';
 
-    // Fetch fresco de Supabase al momento de enviar (no depende de cuándo cargó la página)
+    // Fetch fresco via función Netlify al momento de enviar (service role bypasea RLS)
     let stockOverrides = JSON.parse(localStorage.getItem('grandbar_stock_sistema') || '{}');
-    if (supaUrl && supaKey) {
-      try {
-        const sr = await fetch(supaUrl + '/rest/v1/stock_sistema?select=sku,stock&limit=10000', {
-          headers: { 'apikey': supaKey, 'Authorization': 'Bearer ' + supaKey },
-        });
-        if (sr.ok) {
-          const srows = await sr.json();
-          if (srows.length > 0) {
-            const fresh = {};
-            srows.forEach(r => { fresh[r.sku] = r.stock; });
-            localStorage.setItem('grandbar_stock_sistema', JSON.stringify(fresh));
-            localStorage.setItem('grandbar_stock_sistema_fecha', new Date().toISOString());
-            stockOverrides = fresh;
-          }
+    try {
+      const sr = await fetch('/.netlify/functions/get-stock');
+      if (sr.ok) {
+        const sdata = await sr.json();
+        if (sdata.rows && sdata.rows.length > 0) {
+          const fresh = {};
+          sdata.rows.forEach(r => { fresh[r.sku] = r.stock; });
+          localStorage.setItem('grandbar_stock_sistema', JSON.stringify(fresh));
+          localStorage.setItem('grandbar_stock_sistema_fecha', new Date().toISOString());
+          stockOverrides = fresh;
         }
-      } catch (e) {
-        console.warn('Sin conexión al enviar — usando stock local:', e);
       }
+    } catch (e) {
+      console.warn('Sin conexión al enviar — usando stock local:', e);
     }
 
     // Si stockOverrides tiene datos (de Supabase o localStorage), los SKUs ausentes son 0.

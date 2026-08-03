@@ -460,14 +460,14 @@
       syncMsg.textContent = 'Descargando al dispositivo...';
       syncProgress.style.display = 'flex';
       try {
-        const supaRes = await fetch(SUPA_URL + '/rest/v1/stock_sistema?select=sku,stock&limit=10000', {
-          headers: { apikey: SUPA_KEY, Authorization: 'Bearer ' + SUPA_KEY },
-        });
+        const supaRes = await fetch('/.netlify/functions/get-stock');
         if (supaRes.ok) {
-          const rows = await supaRes.json();
-          const map  = {};
-          rows.forEach(r => { map[r.sku] = r.stock; });
-          localStorage.setItem(LS_STOCK, JSON.stringify(map));
+          const sdata = await supaRes.json();
+          if (sdata.rows && sdata.rows.length > 0) {
+            const map = {};
+            sdata.rows.forEach(r => { map[r.sku] = r.stock; });
+            localStorage.setItem(LS_STOCK, JSON.stringify(map));
+          }
         }
       } catch { /* no crítico — Supabase ya tiene los datos */ }
       syncProgress.style.display = 'none';

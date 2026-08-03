@@ -91,16 +91,14 @@
   const SUPA_URL = 'https://owpsfpifeonwkvwxqovk.supabase.co';
   const SUPA_KEY = 'sb_publishable_FiMoqDt6G15dP9vQOs3n6A_tzULT8YU';
 
-  // Sincronizar stock desde Supabase antes de iniciar el formulario
+  // Cargar stock desde la función Netlify (usa service role — bypasea RLS)
   try {
-    const res = await fetch(SUPA_URL + '/rest/v1/stock_sistema?select=sku,stock&limit=10000', {
-      headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY },
-    });
+    const res = await fetch('/.netlify/functions/get-stock');
     if (res.ok) {
-      const rows = await res.json();
-      if (rows.length > 0) {
+      const data = await res.json();
+      if (data.rows && data.rows.length > 0) {
         const stockMap = {};
-        rows.forEach(r => { stockMap[r.sku] = r.stock; });
+        data.rows.forEach(r => { stockMap[r.sku] = r.stock; });
         localStorage.setItem('grandbar_stock_sistema', JSON.stringify(stockMap));
         localStorage.setItem('grandbar_stock_sistema_fecha', new Date().toISOString());
       }
