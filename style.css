@@ -559,9 +559,47 @@ main {
 .obs-btn.has-obs { border-color: var(--gold); color: var(--gold); }
 .obs-btn:active  { background: var(--border); }
 
-/* Panel observaciones */
+/* Panel observaciones por producto */
 .prod-obs { padding: 0.45rem 0 0.2rem; }
 .prod-obs.hidden { display: none; }
+
+/* Header de grupo de proveedor */
+.prov-group-header {
+  font-family: var(--font);
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--gold);
+  padding: 1rem 0 0.35rem 0.25rem;
+  border-bottom: 1px solid var(--gold-dim);
+  margin-bottom: 0.25rem;
+}
+
+/* Obs. general de proveedor */
+.prov-obs-wrap {
+  padding: 0.5rem 0 0.75rem;
+  border-bottom: 1px dashed var(--border);
+}
+
+.prov-obs-ta {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  color: var(--cream);
+  font-size: 0.82rem;
+  font-family: inherit;
+  padding: 0.5rem 0.7rem;
+  resize: none;
+  box-sizing: border-box;
+  line-height: 1.5;
+  transition: border-color 0.15s;
+}
+
+.prov-obs-ta::placeholder { color: var(--muted); opacity: 0.7; }
+.prov-obs-ta:focus        { outline: none; border-color: var(--gold); border-style: solid; }
+.prov-obs-ta.has-content  { border-color: var(--gold-dim); border-style: solid; color: var(--gold); }
 
 .obs-textarea {
   width: 100%;

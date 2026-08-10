@@ -46,8 +46,9 @@ function initConteoForm({ sector, usuario, productos, proveedores, supaUrl, supa
   productos = productos.filter(p => !p.articulo.startsWith('Promo '));
 
   // Estado: { sku → { depo1, local, depo2, obs } }
-  let values = {};
-  let query  = '';
+  let values  = {};
+  let provObs = {}; // proveedor → texto observación general
+  let query   = '';
 
   // ── DEBUG stock sistema ──
   const _dbgOverrides = JSON.parse(localStorage.getItem('grandbar_stock_sistema') || '{}');
@@ -101,11 +102,16 @@ function initConteoForm({ sector, usuario, productos, proveedores, supaUrl, supa
   // ── Borrador ──
   try {
     const raw = localStorage.getItem(DRAFT_KEY);
-    if (raw) values = JSON.parse(raw);
-  } catch { values = {}; }
+    if (raw) {
+      const draft = JSON.parse(raw);
+      // Compatibilidad: versiones viejas guardaban solo values (objeto plano)
+      values  = draft.values  ?? draft;
+      provObs = draft.provObs ?? {};
+    }
+  } catch { values = {}; provObs = {}; }
 
   function autosave() {
-    try { localStorage.setItem(DRAFT_KEY, JSON.stringify(values)); } catch {}
+    try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ values, provObs })); } catch {}
   }
 
   function filledCount() { return Object.keys(values).length; }
@@ -319,9 +325,62 @@ function initConteoForm({ sector, usuario, productos, proveedores, supaUrl, supa
     }
 
     const frag = document.createDocumentFragment();
-    filtered.forEach(p => frag.appendChild(makeRow(p)));
+
+    if (query) {
+      // Con búsqueda activa: render plano sin agrupar
+      filtered.forEach(p => frag.appendChild(makeRow(p)));
+    } else {
+      // Sin búsqueda: agrupar por proveedor con obs al pie de cada grupo
+      const grupos = [];
+      const idx    = {};
+      filtered.forEach(p => {
+        const key = p.proveedor || '(Sin proveedor)';
+        if (idx[key] === undefined) { idx[key] = grupos.length; grupos.push({ key, items: [] }); }
+        grupos[idx[key]].items.push(p);
+      });
+
+      grupos.forEach(({ key, items }) => {
+        // Header del proveedor
+        const header = document.createElement('div');
+        header.className = 'prov-group-header';
+        header.textContent = key;
+        frag.appendChild(header);
+
+        // Filas de productos
+        items.forEach(p => frag.appendChild(makeRow(p)));
+
+        // Obs general del proveedor
+        frag.appendChild(makeProvObsRow(key));
+      });
+    }
+
     listEl.innerHTML = '';
     listEl.appendChild(frag);
+  }
+
+  // ── Fila de observación general de proveedor ──
+  function makeProvObsRow(provKey) {
+    const wrap = document.createElement('div');
+    wrap.className = 'prov-obs-wrap';
+
+    const ta = document.createElement('textarea');
+    ta.className     = 'prov-obs-ta';
+    ta.placeholder   = '📝 Obs. general de ' + provKey + '…';
+    ta.rows          = 2;
+    ta.value         = provObs[provKey] || '';
+    ta.setAttribute('aria-label', 'Observación general de ' + provKey);
+
+    ta.addEventListener('input', () => {
+      const v = ta.value.trim();
+      if (v) provObs[provKey] = v;
+      else   delete provObs[provKey];
+      ta.classList.toggle('has-content', Boolean(v));
+      autosave();
+    });
+
+    if (ta.value) ta.classList.add('has-content');
+    wrap.appendChild(ta);
+    return wrap;
   }
 
   // ── Búsqueda ──
@@ -441,10 +500,22 @@ function initConteoForm({ sector, usuario, productos, proveedores, supaUrl, supa
       })
       .filter(p => p.total > 0 || p.obs);
 
-    // ── Mensaje de email ──
-    const lineas = conStock.map(p => {
-      const obsLine = p.obs ? ` [${p.obs}]` : '';
-      return `• [${p.sku}] ${p.articulo} — D1:${p.depo1} Loc:${p.local} D2:${p.depo2} = ${p.total}${obsLine}`;
+    // ── Mensaje de email — agrupado por proveedor ──
+    const gruposEmail = {};
+    conStock.forEach(p => {
+      const k = p.proveedor || '(Sin proveedor)';
+      if (!gruposEmail[k]) gruposEmail[k] = [];
+      gruposEmail[k].push(p);
+    });
+
+    const lineas = [];
+    Object.entries(gruposEmail).forEach(([prov, items]) => {
+      lineas.push(`\n▸ ${prov}`);
+      items.forEach(p => {
+        const obsLine = p.obs ? ` [${p.obs}]` : '';
+        lineas.push(`  • [${p.sku}] ${p.articulo} — D1:${p.depo1} Loc:${p.local} D2:${p.depo2} = ${p.total}${obsLine}`);
+      });
+      if (provObs[prov]) lineas.push(`  📝 ${provObs[prov]}`);
     });
 
     const totUnidades = conStock.reduce((s, p) => s + p.total, 0);
@@ -495,13 +566,14 @@ function initConteoForm({ sector, usuario, productos, proveedores, supaUrl, supa
       const dataRows = conStock.map(p => [
         p.sku,
         p.articulo,
-        p.stock_sistema + p.promo,   // Stock Sistema = producto + promo combinados
-        p.promo,                      // Promo = desglose de cuánto es promo dentro del total
+        p.stock_sistema + p.promo,
+        p.promo,
         p.depo1,
         p.local,
         p.depo2,
         p.total,
-        p.total - (p.stock_sistema + p.promo),  // Diferencia = Total - Stock Sistema combinado
+        p.total - (p.stock_sistema + p.promo),
+        provObs[p.proveedor] || '',   // Obs. general del proveedor
       ]);
 
       const provResumen = proveedores && proveedores.length
@@ -512,7 +584,7 @@ function initConteoForm({ sector, usuario, productos, proveedores, supaUrl, supa
         [`${sectorLabel} — ${usuario} — ${fecha}`],
         [`Proveedores: ${provResumen}`],
         [],   // fila vacía separadora
-        ['SKU', 'Descripción', 'Stock Sistema', 'Promo', 'Depo 1', 'Local', 'Depo 2', 'Total', 'Diferencia'],
+        ['SKU', 'Descripción', 'Stock Sistema', 'Promo', 'Depo 1', 'Local', 'Depo 2', 'Total', 'Diferencia', 'Obs. Proveedor'],
         ...dataRows,
       ];
 
@@ -529,6 +601,7 @@ function initConteoForm({ sector, usuario, productos, proveedores, supaUrl, supa
         { wch: 10 }, // Depo 2
         { wch: 10 }, // Total
         { wch: 12 }, // Diferencia
+        { wch: 40 }, // Obs. Proveedor
       ];
 
       const styleTitulo    = { font: { bold: true, sz: 13, color: { rgb: 'CBA86A' } } };
