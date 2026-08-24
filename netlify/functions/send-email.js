@@ -3,7 +3,7 @@
 // La API key vive en variables de entorno de Netlify, nunca en el código.
 
 const RESEND_FROM = 'Stock GrandBar <stock@grandbar.com.ar>';
-const RESEND_TO   = ['jlemos@grandbar.com.ar', 'lgonzalez@grandbar.com.ar', 'facturacion@grandbar.com.ar', 'compras@grandbar.com.ar'];
+const RESEND_TO   = ['jlemos@grandbar.com.ar', 'lgonzalez@grandbar.com.ar', 'facturacion@grandbar.com.ar', 'compras@grandbar.com.ar', 'proveedores@grandbar.com.ar'];
 
 exports.handler = async function (event) {
   // Solo aceptar POST
