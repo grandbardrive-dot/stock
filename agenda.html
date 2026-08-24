@@ -571,16 +571,23 @@ function confirmReset() {
       const today = toDateStr(new Date());
       dbg = `✅ ${rows.length} filas de Supabase`;
 
+      // Supabase es fuente de verdad — reemplazar localStorage, no mezclar
+      const newDoneV = new Set();
+      const newDoneS = new Set();
+
       rows.forEach(r => {
         const map = r.sector === 'vinos' ? registroVinos : registroSpirits;
         if (!map.has(r.fecha)) map.set(r.fecha, new Set());
         map.get(r.fecha).add(r.proveedor);
+        // Solo fechas pasadas = hechos (hoy no cuenta aún)
         if (r.fecha < today) {
-          if (r.sector === 'vinos')   doneVinos.add(r.proveedor);
-          if (r.sector === 'spirits') doneSpirits.add(r.proveedor);
+          if (r.sector === 'vinos')   newDoneV.add(r.proveedor);
+          if (r.sector === 'spirits') newDoneS.add(r.proveedor);
         }
       });
 
+      doneVinos   = newDoneV;
+      doneSpirits = newDoneS;
       localStorage.setItem(LS_DONE_V, JSON.stringify([...doneVinos]));
       localStorage.setItem(LS_DONE_S, JSON.stringify([...doneSpirits]));
     } else {
