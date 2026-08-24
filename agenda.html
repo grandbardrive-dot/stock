@@ -241,6 +241,10 @@ let secPerItem  = parseInt(localStorage.getItem(LS_SPEED) || '45', 10);
 let doneVinos   = new Set(JSON.parse(localStorage.getItem(LS_DONE_V)  || '[]'));
 let doneSpirits = new Set(JSON.parse(localStorage.getItem(LS_DONE_S)  || '[]'));
 
+// registro de Supabase: Map<dateStr, Set<provName>> por sector
+let registroVinos   = new Map(); // fecha → Set de proveedores
+let registroSpirits = new Map();
+
 // ── EXTRACCIÓN DE PROVEEDORES ─────────────────────────────────
 function getProveedores(productos, inactivas) {
   const map = {};
@@ -255,23 +259,67 @@ function getProveedores(productos, inactivas) {
 }
 
 // ── DISTRIBUCIÓN POR TIEMPO ───────────────────────────────────
-// Greedy: mete proveedores de mayor a menor hasta llenar la sesión.
-// Si un proveedor solo ya supera la capacidad → sesión propia.
-function buildSchedule(provs, doneSet) {
-  const pending  = provs.filter(p => !doneSet.has(p.name));
-  const done     = provs.filter(p =>  doneSet.has(p.name));
-  const sessions = [];
-  let   current  = { provs: [], totalMin: 0 };
+function toDateStr(d) {
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
 
-  pending.forEach(p => {
-    if (current.totalMin > 0 && current.totalMin + p.minEst > SESSION_MIN) {
-      sessions.push({ ...current });
-      current = { provs: [], totalMin: 0 };
-    }
-    current.provs.push(p);
-    current.totalMin += p.minEst;
+function buildSchedule(provs, doneSet, registroMap) {
+  const today    = toDateStr(new Date());
+  const provByName = new Map(provs.map(p => [p.name, p]));
+
+  // Proveedores hechos (doneSet = pasado + marcados manualmente)
+  const done = provs.filter(p => doneSet.has(p.name));
+
+  // 1. Sesiones del registro de Supabase (fechas futuras o hoy asignadas por Laura)
+  const sessionsFromRegistro = [];
+  const scheduledNames = new Set();
+
+  const futureDates = [...registroMap.keys()]
+    .filter(d => d >= today)
+    .sort();
+
+  futureDates.forEach(dateStr => {
+    const names = [...registroMap.get(dateStr)]
+      .filter(n => !doneSet.has(n) && provByName.has(n));
+    if (names.length === 0) return;
+    const provList = names.map(n => provByName.get(n));
+    sessionsFromRegistro.push({
+      date: dateStr,
+      provs: provList,
+      totalMin: provList.reduce((s, p) => s + p.minEst, 0),
+      fromRegistro: true,
+    });
+    names.forEach(n => scheduledNames.add(n));
   });
-  if (current.provs.length) sessions.push(current);
+
+  // 2. Proveedores sin asignar → algoritmo greedy
+  const unscheduled = provs.filter(p => !doneSet.has(p.name) && !scheduledNames.has(p.name));
+  const usedDates   = new Set(sessionsFromRegistro.map(s => s.date));
+  const algoSessions = [];
+
+  // Encontrar primer lunes disponible (no usado por registro)
+  let algoDate = nextMonday();
+  while (usedDates.has(toDateStr(algoDate))) algoDate.setDate(algoDate.getDate() + 7);
+
+  let cur = { provs: [], totalMin: 0 };
+  unscheduled.forEach(p => {
+    if (cur.totalMin > 0 && cur.totalMin + p.minEst > SESSION_MIN) {
+      algoSessions.push({ date: toDateStr(algoDate), provs: [...cur.provs], totalMin: cur.totalMin });
+      algoDate.setDate(algoDate.getDate() + 7);
+      while (usedDates.has(toDateStr(algoDate))) algoDate.setDate(algoDate.getDate() + 7);
+      cur = { provs: [], totalMin: 0 };
+    }
+    cur.provs.push(p);
+    cur.totalMin += p.minEst;
+  });
+  if (cur.provs.length) {
+    while (usedDates.has(toDateStr(algoDate))) algoDate.setDate(algoDate.getDate() + 7);
+    algoSessions.push({ date: toDateStr(algoDate), provs: cur.provs, totalMin: cur.totalMin });
+  }
+
+  // 3. Combinar y ordenar por fecha
+  const sessions = [...sessionsFromRegistro, ...algoSessions]
+    .sort((a, b) => a.date.localeCompare(b.date));
 
   return { sessions, done };
 }
@@ -304,8 +352,9 @@ function build() {
   const inactivas = isVinos ? INACTIVAS_VINOS : new Set();
   const doneSet   = isVinos ? doneVinos : doneSpirits;
 
-  const provs = getProveedores(productos, inactivas);
-  const { sessions, done } = buildSchedule(provs, doneSet);
+  const provs      = getProveedores(productos, inactivas);
+  const registroMap = isVinos ? registroVinos : registroSpirits;
+  const { sessions, done } = buildSchedule(provs, doneSet, registroMap);
 
   const totalProv  = provs.length;
   const doneCount  = done.length;
@@ -346,8 +395,9 @@ function build() {
   // ¿Cuántos proveedores del primer lunes ya estaban "cargados"?
   // (vienen de semanas anteriores perdidas — los que quedan primero)
   sessions.forEach((sess, i) => {
-    const date = addWeeks(first, i);
-    const isNext = i === 0;
+    const date   = new Date(sess.date + 'T12:00:00');
+    const today  = toDateStr(new Date());
+    const isNext = i === 0 || sess.date === today;
 
     // ¿Hay proveedores parcialmente hechos en esta sesión?
     const doneInSess = sess.provs.filter(p => doneSet.has(p.name)).length;
@@ -511,21 +561,32 @@ function confirmReset() {
   }
 }
 
-// Al cargar, sincronizar el registro de Supabase al localStorage
+// Al cargar, sincronizar el registro de Supabase
 (async () => {
   try {
     const res = await fetch('/.netlify/functions/agenda-data?action=registro');
     if (res.ok) {
-      const rows = await res.json();
+      const rows  = await res.json();
+      const today = toDateStr(new Date());
+
       rows.forEach(r => {
-        if (r.sector === 'vinos')   doneVinos.add(r.proveedor);
-        if (r.sector === 'spirits') doneSpirits.add(r.proveedor);
+        // Poblar registroMap por sector
+        const map = r.sector === 'vinos' ? registroVinos : registroSpirits;
+        if (!map.has(r.fecha)) map.set(r.fecha, new Set());
+        map.get(r.fecha).add(r.proveedor);
+
+        // Proveedores en fechas pasadas = hechos
+        if (r.fecha <= today) {
+          if (r.sector === 'vinos')   doneVinos.add(r.proveedor);
+          if (r.sector === 'spirits') doneSpirits.add(r.proveedor);
+        }
       });
+
       localStorage.setItem(LS_DONE_V, JSON.stringify([...doneVinos]));
       localStorage.setItem(LS_DONE_S, JSON.stringify([...doneSpirits]));
     }
   } catch { /* sin conexión — usa localStorage */ }
-  switchTab(currentTab); // siempre renderiza
+  switchTab(currentTab);
 })();
 </script>
 </body>
