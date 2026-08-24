@@ -511,7 +511,21 @@ function confirmReset() {
   }
 }
 
-switchTab(currentTab);
+// Al cargar, sincronizar el registro de Supabase al localStorage
+(async () => {
+  try {
+    const res = await fetch('/.netlify/functions/agenda-data?action=registro');
+    if (!res.ok) return;
+    const rows = await res.json();
+    rows.forEach(r => {
+      if (r.sector === 'vinos')   doneVinos.add(r.proveedor);
+      if (r.sector === 'spirits') doneSpirits.add(r.proveedor);
+    });
+    localStorage.setItem(LS_DONE_V, JSON.stringify([...doneVinos]));
+    localStorage.setItem(LS_DONE_S, JSON.stringify([...doneSpirits]));
+  } catch { /* sin conexión — usa localStorage */ }
+  switchTab(currentTab);
+})();
 </script>
 </body>
 </html>
