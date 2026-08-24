@@ -715,11 +715,17 @@ function renderCalendar() {
 
 async function calRemoveProv(fecha, proveedor) {
   if (!confirm(`¿Quitar "${proveedor}" del ${fecha}?`)) return;
-  await fetch('/.netlify/functions/agenda-data', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'del-registro', fecha, sector: agSector, proveedor }),
-  });
+  try {
+    const res = await fetch('/.netlify/functions/agenda-data', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'del-registro', fecha, sector: agSector, proveedor }),
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+  } catch (e) {
+    showToast('⚠ Error al guardar: ' + e.message, false);
+    return;
+  }
   agRegistro = agRegistro.filter(r => !(r.sector === agSector && r.proveedor === proveedor));
   renderCalendar();
   showToast('Quitado del registro');
@@ -812,19 +818,25 @@ async function modalToggleProv(proveedor) {
   const isInToday = todaySet.has(proveedor);
   const action = isInToday ? 'del-registro' : 'add-registro';
 
-  await fetch('/.netlify/functions/agenda-data', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action, fecha: modalFecha, sector: agSector, proveedor }),
-  });
+  try {
+    const res = await fetch('/.netlify/functions/agenda-data', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, fecha: modalFecha, sector: agSector, proveedor }),
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+  } catch (e) {
+    showToast('⚠ Error al guardar: ' + e.message, false);
+    return; // no actualizar localmente si falló
+  }
 
-  // actualizar agRegistro local
+  // actualizar agRegistro local solo si el servidor confirmó
   agRegistro = agRegistro.filter(r => !(r.sector === agSector && r.proveedor === proveedor));
   if (!isInToday) agRegistro.push({ fecha: modalFecha, sector: agSector, proveedor });
 
   renderModalList();
   renderCalendar();
-  showToast(isInToday ? 'Quitado del día' : 'Agregado al día');
+  showToast(isInToday ? 'Quitado del día' : '✓ Guardado');
 }
 
 // ══════════════════════════════════════════════════════

@@ -563,19 +563,18 @@ function confirmReset() {
 
 // Al cargar, sincronizar el registro de Supabase
 (async () => {
+  let dbg = '⏳ cargando…';
   try {
     const res = await fetch('/.netlify/functions/agenda-data?action=registro');
     if (res.ok) {
       const rows  = await res.json();
       const today = toDateStr(new Date());
+      dbg = `✅ ${rows.length} filas de Supabase`;
 
       rows.forEach(r => {
-        // Poblar registroMap por sector
         const map = r.sector === 'vinos' ? registroVinos : registroSpirits;
         if (!map.has(r.fecha)) map.set(r.fecha, new Set());
         map.get(r.fecha).add(r.proveedor);
-
-        // Proveedores en fechas estrictamente pasadas = hechos (hoy no cuenta aún)
         if (r.fecha < today) {
           if (r.sector === 'vinos')   doneVinos.add(r.proveedor);
           if (r.sector === 'spirits') doneSpirits.add(r.proveedor);
@@ -584,8 +583,18 @@ function confirmReset() {
 
       localStorage.setItem(LS_DONE_V, JSON.stringify([...doneVinos]));
       localStorage.setItem(LS_DONE_S, JSON.stringify([...doneSpirits]));
+    } else {
+      dbg = `❌ HTTP ${res.status}`;
     }
-  } catch { /* sin conexión — usa localStorage */ }
+  } catch(e) { dbg = '❌ ' + e.message; }
+
+  // Debug banner temporal
+  const banner = document.createElement('div');
+  banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#1a1a00;color:#ffff00;font-size:13px;padding:6px 12px;text-align:center;font-family:monospace';
+  banner.textContent = 'DB: ' + dbg + ' | vinos=' + registroVinos.size + ' fechas | spirits=' + registroSpirits.size + ' fechas';
+  document.body.appendChild(banner);
+  setTimeout(() => banner.remove(), 15000);
+
   switchTab(currentTab);
 })();
 </script>
