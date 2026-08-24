@@ -263,6 +263,148 @@
       margin-bottom: 1rem;
     }
     .info-box strong { color: var(--cream); }
+
+    /* ── Tabs de admin ── */
+    .admin-tabs {
+      display: flex;
+      background: #111;
+      border-bottom: 2px solid var(--border);
+      position: sticky; top: 0; z-index: 90;
+    }
+    .admin-tab {
+      flex: 1; background: none; border: none;
+      border-bottom: 3px solid transparent; margin-bottom: -2px;
+      padding: 11px 6px 9px;
+      font-family: var(--font); font-size: 12px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .5px; color: #555; cursor: pointer;
+      transition: color .15s, border-color .15s;
+    }
+    .admin-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+    .admin-panel { display: none; }
+    .admin-panel.active { display: block; }
+
+    /* ── Sector tabs (dentro de sección) ── */
+    .sector-tabs { display: flex; gap: 4px; margin-bottom: 1rem; }
+    .sector-tab {
+      flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 7px 4px; font-family: var(--font); font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .5px; color: #666; cursor: pointer;
+    }
+    .sector-tab.active { background: var(--gold); color: #111; border-color: var(--gold); }
+
+    /* ── Calendario de agenda ── */
+    .cal-month-header {
+      font-family: var(--font); font-size: 11px; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 1px; color: var(--gold);
+      margin: 1.25rem 0 .5rem; padding-bottom: .35rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .cal-row {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 8px 0; border-bottom: 1px solid #1a1a1a;
+      position: relative;
+    }
+    .cal-date {
+      min-width: 80px; flex-shrink: 0;
+      font-family: var(--font); font-size: 12px; font-weight: 700; color: #bbb;
+      padding-top: 2px;
+    }
+    .cal-date.is-past  { color: #444; }
+    .cal-date.is-today { color: var(--gold); }
+    .cal-chips { flex: 1; display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+    .cal-chip {
+      background: #1e2a1e; border: 1px solid #2a4a2a; border-radius: 20px;
+      padding: 3px 8px 3px 6px; font-size: 10px; font-weight: 600; color: #6aaa6a;
+      display: flex; align-items: center; gap: 4px; cursor: pointer;
+      transition: background .15s;
+    }
+    .cal-chip:hover { background: #152015; }
+    .cal-chip-x { font-size: 10px; color: #4a7a4a; font-weight: 400; }
+    .cal-none { font-size: 11px; color: #333; font-style: italic; }
+    .cal-add-btn {
+      flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%;
+      background: none; border: 1px dashed #2e2e2e; color: #444;
+      font-size: 16px; line-height: 1; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: border-color .15s, color .15s;
+    }
+    .cal-add-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+    /* ── Modal proveedor ── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 200;
+      display: none;
+    }
+    .modal-overlay.open { display: block; }
+    .modal-panel {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 201;
+      background: #181818; border-top: 2px solid var(--gold);
+      border-radius: 16px 16px 0 0;
+      padding: 0 0 env(safe-area-inset-bottom, 0);
+      max-height: 80vh; display: flex; flex-direction: column;
+      transform: translateY(100%); transition: transform .25s ease;
+    }
+    .modal-panel.open { transform: translateY(0); }
+    .modal-header {
+      display: flex; align-items: center; padding: 14px 16px 10px;
+      border-bottom: 1px solid #222;
+    }
+    .modal-title { flex: 1; font-family: var(--font); font-size: 13px; font-weight: 700; color: #fff; text-transform: uppercase; letter-spacing: .5px; }
+    .modal-close { background: none; border: none; color: #666; font-size: 20px; cursor: pointer; padding: 0 0 0 12px; }
+    .modal-search {
+      margin: 8px 12px; background: #111; border: 1px solid #2a2a2a;
+      border-radius: var(--radius); padding: 8px 12px;
+      color: var(--cream); font-size: 14px; outline: none;
+    }
+    .modal-search:focus { border-color: var(--gold); }
+    .modal-list { flex: 1; overflow-y: auto; padding: 4px 0 8px; }
+    .modal-group-header {
+      font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;
+      color: #444; padding: 8px 16px 4px;
+    }
+    .modal-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 16px; cursor: pointer; transition: background .1s;
+    }
+    .modal-item:hover { background: #1e1e1e; }
+    .modal-item.is-today-item { opacity: .6; }
+    .modal-item.is-other-day  { opacity: .4; }
+    .modal-item-name {
+      flex: 1; font-size: 13px; font-weight: 600; color: #ccc; text-transform: uppercase;
+    }
+    .modal-item.is-today-item .modal-item-name { color: var(--gold); }
+    .modal-item-meta { font-size: 10px; color: #555; white-space: nowrap; }
+    .modal-item-badge {
+      font-size: 10px; padding: 2px 6px; border-radius: 10px;
+      font-family: var(--font); font-weight: 700; text-transform: uppercase;
+    }
+    .badge-agregar { background: #1e3a1e; color: #6aaa6a; border: 1px solid #2a5a2a; }
+    .badge-quitar  { background: #3a2010; color: #c07a40; border: 1px solid #5a3018; }
+    .badge-otro    { background: #2a2a2a; color: #555; border: 1px solid #333; }
+
+    /* ── Proveedores section ── */
+    .prov-admin-search {
+      display: block; width: 100%; box-sizing: border-box;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 9px 12px;
+      color: var(--cream); font-size: 14px; outline: none; margin-bottom: 1rem;
+    }
+    .prov-admin-search:focus { border-color: var(--gold); }
+    .prov-admin-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 0; border-bottom: 1px solid #1a1a1a;
+    }
+    .prov-admin-name { flex: 1; font-size: 12px; font-weight: 600; color: #bbb; text-transform: uppercase; }
+    .prov-admin-name.excluido { color: #3a2a2a; text-decoration: line-through; }
+    .prov-admin-count { font-size: 10px; color: #444; white-space: nowrap; }
+    .prov-excluir-btn {
+      font-family: var(--font); font-size: 10px; font-weight: 700; text-transform: uppercase;
+      padding: 4px 8px; border-radius: var(--radius); cursor: pointer; border: 1px solid;
+      white-space: nowrap; transition: background .15s;
+    }
+    .prov-excluir-btn.activo  { background: #1a2a1a; color: #6aaa6a; border-color: #2a5a2a; }
+    .prov-excluir-btn.excluido { background: #2a1a1a; color: var(--danger); border-color: #5a2a2a; }
+    .prov-stats { font-size: 11px; color: #555; margin-bottom: .75rem; }
   </style>
 </head>
 <body>
@@ -278,7 +420,17 @@
   </div>
 </header>
 
+<!-- Tabs de admin -->
+<div class="admin-tabs">
+  <button class="admin-tab active" onclick="switchAdminTab('stock')">📦 Stock</button>
+  <button class="admin-tab" onclick="switchAdminTab('agenda')">📅 Agenda</button>
+  <button class="admin-tab" onclick="switchAdminTab('proveedores')">🏭 Proveedores</button>
+</div>
+
 <div class="admin-wrap">
+
+<!-- ══ PANEL: STOCK ══ -->
+<div id="panel-stock" class="admin-panel active">
 
   <!-- ══ SECCIÓN: Sincronizar desde Córdoba Software ══ -->
   <div class="admin-section">
@@ -378,6 +530,52 @@
     </button>
   </div>
 
+</div><!-- /panel-stock -->
+
+<!-- ══ PANEL: AGENDA ══ -->
+<div id="panel-agenda" class="admin-panel">
+  <div class="admin-section">
+    <div class="admin-section-title">Registro de Agenda</div>
+    <div class="admin-section-desc">
+      Historial de qué proveedores se contaron en cada lunes. Tocá <strong>+</strong> para agregar o quitar un proveedor de un día.
+    </div>
+    <div class="sector-tabs">
+      <button class="sector-tab active" onclick="setAgSector('vinos', this)">🍷 Vinos</button>
+      <button class="sector-tab" onclick="setAgSector('spirits', this)">🥃 Spirits</button>
+    </div>
+    <div id="cal-container">
+      <div style="text-align:center;padding:2rem;color:#444;font-size:13px;">Cargando...</div>
+    </div>
+  </div>
+</div><!-- /panel-agenda -->
+
+<!-- ══ PANEL: PROVEEDORES ══ -->
+<div id="panel-proveedores" class="admin-panel">
+  <div class="admin-section">
+    <div class="admin-section-title">Proveedores excluidos</div>
+    <div class="admin-section-desc">
+      Los proveedores marcados como <strong>Excluido</strong> no aparecen en la agenda ni en los conteos. Los cambios se guardan en la nube.
+    </div>
+    <div class="sector-tabs">
+      <button class="sector-tab active" onclick="setProvSector('vinos', this)">🍷 Vinos</button>
+      <button class="sector-tab" onclick="setProvSector('spirits', this)">🥃 Spirits</button>
+    </div>
+    <input type="search" class="prov-admin-search" id="prov-search"
+      placeholder="Buscar proveedor…" oninput="renderProvList()">
+    <div class="prov-stats" id="prov-stats"></div>
+    <div id="prov-list-container"></div>
+  </div>
+</div><!-- /panel-proveedores -->
+
+<!-- Modal agregar proveedor a día -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal()"></div>
+<div class="modal-panel" id="modal-panel">
+  <div class="modal-header">
+    <span class="modal-title" id="modal-title">Agregar proveedor</span>
+    <button class="modal-close" onclick="closeModal()">✕</button>
+  </div>
+  <input type="search" class="modal-search" id="modal-search" placeholder="Buscar proveedor…" oninput="renderModalList()">
+  <div class="modal-list" id="modal-list"></div>
 </div>
 
 <!-- Toast -->
@@ -386,6 +584,318 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 <script src="productos.js"></script>
 <script src="app.js"></script>
+
+<script>
+// ══════════════════════════════════════════════════════
+// NAVEGACIÓN DE TABS
+// ══════════════════════════════════════════════════════
+function switchAdminTab(tab) {
+  document.querySelectorAll('.admin-tab').forEach((b, i) => {
+    const tabs = ['stock','agenda','proveedores'];
+    b.classList.toggle('active', tabs[i] === tab);
+  });
+  document.querySelectorAll('.admin-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + tab).classList.add('active');
+  if (tab === 'agenda'      && !agLoaded) loadAgenda();
+  if (tab === 'proveedores' && !provLoaded) loadProveedores();
+}
+
+// ══════════════════════════════════════════════════════
+// AGENDA — REGISTRO DE CALENDARIO
+// ══════════════════════════════════════════════════════
+let agLoaded   = false;
+let agSector   = 'vinos';
+let agRegistro = [];  // [{fecha, sector, proveedor}]
+
+async function loadAgenda() {
+  agLoaded = true;
+  try {
+    const r = await fetch('/.netlify/functions/agenda-data?action=registro');
+    agRegistro = r.ok ? await r.json() : [];
+  } catch { agRegistro = []; }
+  renderCalendar();
+}
+
+function setAgSector(sec, btn) {
+  agSector = sec;
+  btn.closest('.sector-tabs').querySelectorAll('.sector-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderCalendar();
+}
+
+function getAgendaProveedores() {
+  return agSector === 'vinos'
+    ? getUniqueProvs(PRODUCTOS_VINOS)
+    : getUniqueProvs(PRODUCTOS_SPIRITS);
+}
+
+function getUniqueProvs(productos) {
+  const map = {};
+  (productos || []).forEach(p => {
+    const k = (p.proveedor || '').trim();
+    if (k) map[k] = (map[k] || 0) + 1;
+  });
+  return Object.entries(map)
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+function getMondaysRange() {
+  // 3 meses atrás → 3 meses adelante
+  const mondays = [];
+  const start = new Date(); start.setDate(start.getDate() - 90); start.setHours(0,0,0,0);
+  const end   = new Date(); end.setDate(end.getDate() + 90);
+  // Ir al primer lunes desde start
+  while (start.getDay() !== 1) start.setDate(start.getDate() + 1);
+  const cur = new Date(start);
+  while (cur <= end) {
+    mondays.push(new Date(cur));
+    cur.setDate(cur.getDate() + 7);
+  }
+  return mondays;
+}
+
+function toDateStr(d) {
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+function fmtCalDate(d) {
+  const DS = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  const MS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  return `Lun ${d.getDate()} ${MS[d.getMonth()]}`;
+}
+
+function renderCalendar() {
+  const container = document.getElementById('cal-container');
+  if (!container) return;
+
+  const mondays = getMondaysRange();
+  const today   = toDateStr(new Date());
+
+  // Registro filtrado por sector actual
+  const secReg = agRegistro.filter(r => r.sector === agSector);
+  // Map: dateStr → Set<proveedor>
+  const byDate = {};
+  secReg.forEach(r => {
+    if (!byDate[r.fecha]) byDate[r.fecha] = new Set();
+    byDate[r.fecha].add(r.proveedor);
+  });
+
+  let html = '';
+  let lastMonth = -1;
+  const MS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+  mondays.forEach(d => {
+    const ds = toDateStr(d);
+    if (d.getMonth() !== lastMonth) {
+      lastMonth = d.getMonth();
+      html += `<div class="cal-month-header">${MS[d.getMonth()]} ${d.getFullYear()}</div>`;
+    }
+    const isPast  = ds < today;
+    const isToday = ds === today;
+    const provs   = byDate[ds] ? [...byDate[ds]] : [];
+
+    const chips = provs.map(p =>
+      `<span class="cal-chip" onclick="calRemoveProv('${ds}','${p.replace(/'/g,"\\'")}')">
+        ${p} <span class="cal-chip-x">✕</span>
+      </span>`
+    ).join('');
+
+    html += `<div class="cal-row">
+      <div class="cal-date ${isPast&&!isToday?'is-past':''} ${isToday?'is-today':''}">${fmtCalDate(d)}</div>
+      <div class="cal-chips">
+        ${chips || '<span class="cal-none">sin registro</span>'}
+      </div>
+      <button class="cal-add-btn" onclick="openModal('${ds}')" title="Agregar proveedor">+</button>
+    </div>`;
+  });
+
+  container.innerHTML = html;
+}
+
+async function calRemoveProv(fecha, proveedor) {
+  if (!confirm(`¿Quitar "${proveedor}" del ${fecha}?`)) return;
+  await fetch('/.netlify/functions/agenda-data', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'del-registro', fecha, sector: agSector, proveedor }),
+  });
+  agRegistro = agRegistro.filter(r => !(r.sector === agSector && r.proveedor === proveedor));
+  renderCalendar();
+  showToast('Quitado del registro');
+}
+
+// ── Modal ──────────────────────────────────────────────
+let modalFecha = '';
+
+function openModal(fecha) {
+  modalFecha = fecha;
+  const MS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  const d   = new Date(fecha + 'T12:00:00');
+  document.getElementById('modal-title').textContent =
+    `${agSector === 'vinos' ? '🍷 Vinos' : '🥃 Spirits'} — Lun ${d.getDate()} ${MS[d.getMonth()]}`;
+  document.getElementById('modal-search').value = '';
+  document.getElementById('modal-overlay').classList.add('open');
+  document.getElementById('modal-panel').classList.add('open');
+  renderModalList();
+  document.getElementById('modal-search').focus();
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  document.getElementById('modal-panel').classList.remove('open');
+}
+
+function renderModalList() {
+  const q       = (document.getElementById('modal-search').value || '').toLowerCase();
+  const allProvs = getAgendaProveedores();
+
+  // Quiénes están en este día
+  const todaySet  = new Set(
+    agRegistro.filter(r => r.sector === agSector && r.fecha === modalFecha).map(r => r.proveedor)
+  );
+  // Quiénes están en otro día
+  const otherDate = {};
+  agRegistro.filter(r => r.sector === agSector && r.fecha !== modalFecha)
+    .forEach(r => { otherDate[r.proveedor] = r.fecha; });
+
+  const filtered = allProvs.filter(p => !q || p.name.toLowerCase().includes(q));
+
+  const enEste   = filtered.filter(p => todaySet.has(p.name));
+  const libres   = filtered.filter(p => !todaySet.has(p.name) && !otherDate[p.name]);
+  const otro     = filtered.filter(p => !todaySet.has(p.name) &&  otherDate[p.name]);
+
+  let html = '';
+
+  if (enEste.length) {
+    html += `<div class="modal-group-header">En este día — click para quitar</div>`;
+    enEste.forEach(p => {
+      html += `<div class="modal-item is-today-item" onclick="modalToggleProv('${p.name.replace(/'/g,"\\'")}')">
+        <span class="modal-item-name">${p.name}</span>
+        <span class="modal-item-meta">${p.count} ítems</span>
+        <span class="modal-item-badge badge-quitar">Quitar</span>
+      </div>`;
+    });
+  }
+  if (libres.length) {
+    html += `<div class="modal-group-header">Sin hacer — click para agregar</div>`;
+    libres.forEach(p => {
+      html += `<div class="modal-item" onclick="modalToggleProv('${p.name.replace(/'/g,"\\'")}')">
+        <span class="modal-item-name">${p.name}</span>
+        <span class="modal-item-meta">${p.count} ítems</span>
+        <span class="modal-item-badge badge-agregar">Agregar</span>
+      </div>`;
+    });
+  }
+  if (otro.length) {
+    html += `<div class="modal-group-header">Ya hechos otro día</div>`;
+    otro.forEach(p => {
+      const f = otherDate[p.name];
+      const d = new Date(f + 'T12:00:00');
+      const MS2 = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+      html += `<div class="modal-item is-other-day" onclick="modalToggleProv('${p.name.replace(/'/g,"\\'")}')">
+        <span class="modal-item-name">${p.name}</span>
+        <span class="modal-item-meta">${d.getDate()} ${MS2[d.getMonth()]}</span>
+        <span class="modal-item-badge badge-otro">Mover acá</span>
+      </div>`;
+    });
+  }
+  if (!html) html = '<div style="padding:1rem;color:#444;font-size:13px;text-align:center">Sin resultados</div>';
+
+  document.getElementById('modal-list').innerHTML = html;
+}
+
+async function modalToggleProv(proveedor) {
+  const todaySet = new Set(
+    agRegistro.filter(r => r.sector === agSector && r.fecha === modalFecha).map(r => r.proveedor)
+  );
+  const isInToday = todaySet.has(proveedor);
+  const action = isInToday ? 'del-registro' : 'add-registro';
+
+  await fetch('/.netlify/functions/agenda-data', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action, fecha: modalFecha, sector: agSector, proveedor }),
+  });
+
+  // actualizar agRegistro local
+  agRegistro = agRegistro.filter(r => !(r.sector === agSector && r.proveedor === proveedor));
+  if (!isInToday) agRegistro.push({ fecha: modalFecha, sector: agSector, proveedor });
+
+  renderModalList();
+  renderCalendar();
+  showToast(isInToday ? 'Quitado del día' : 'Agregado al día');
+}
+
+// ══════════════════════════════════════════════════════
+// PROVEEDORES — GESTIÓN DE EXCLUSIONES
+// ══════════════════════════════════════════════════════
+let provLoaded   = false;
+let provSector   = 'vinos';
+let exclusiones  = new Set(); // "sector:proveedor"
+
+async function loadProveedores() {
+  provLoaded = true;
+  try {
+    const r = await fetch('/.netlify/functions/agenda-data?action=exclusiones');
+    const rows = r.ok ? await r.json() : [];
+    exclusiones = new Set(rows.map(r => r.sector + ':' + r.proveedor));
+  } catch { exclusiones = new Set(); }
+  renderProvList();
+}
+
+function setProvSector(sec, btn) {
+  provSector = sec;
+  btn.closest('.sector-tabs').querySelectorAll('.sector-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('prov-search').value = '';
+  renderProvList();
+}
+
+function renderProvList() {
+  const allProvs = provSector === 'vinos'
+    ? getUniqueProvs(PRODUCTOS_VINOS)
+    : getUniqueProvs(PRODUCTOS_SPIRITS);
+  const q = (document.getElementById('prov-search').value || '').toLowerCase();
+  const filtered = allProvs.filter(p => !q || p.name.toLowerCase().includes(q));
+  const excCount = allProvs.filter(p => exclusiones.has(provSector + ':' + p.name)).length;
+
+  document.getElementById('prov-stats').textContent =
+    `${allProvs.length} proveedores · ${excCount} excluidos`;
+
+  const html = filtered.map(p => {
+    const key = provSector + ':' + p.name;
+    const isExcl = exclusiones.has(key);
+    return `<div class="prov-admin-row">
+      <span class="prov-admin-name ${isExcl ? 'excluido' : ''}">${p.name}</span>
+      <span class="prov-admin-count">${p.count} ítems</span>
+      <button class="prov-excluir-btn ${isExcl ? 'excluido' : 'activo'}"
+        onclick="toggleExclusion('${p.name.replace(/'/g,"\\'")}')">
+        ${isExcl ? '✗ Excluido' : '✓ Activo'}
+      </button>
+    </div>`;
+  }).join('');
+
+  document.getElementById('prov-list-container').innerHTML =
+    html || '<div style="padding:1rem;color:#444;font-size:13px">Sin resultados</div>';
+}
+
+async function toggleExclusion(proveedor) {
+  const key = provSector + ':' + proveedor;
+  const isExcl = exclusiones.has(key);
+  const action = isExcl ? 'del-exclusion' : 'add-exclusion';
+
+  await fetch('/.netlify/functions/agenda-data', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action, sector: provSector, proveedor }),
+  });
+
+  if (isExcl) exclusiones.delete(key); else exclusiones.add(key);
+  renderProvList();
+  showToast(isExcl ? `${proveedor} — activo` : `${proveedor} — excluido`);
+}
+</script>
 <script>
 (function () {
   // ── Supabase ────────────────────────────────────────────────

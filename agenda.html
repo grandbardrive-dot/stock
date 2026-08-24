@@ -469,11 +469,23 @@ function toggleCard(id) {
 }
 
 function toggleProv(name, isVinos) {
-  const set   = isVinos ? doneVinos : doneSpirits;
-  const lsKey = isVinos ? LS_DONE_V : LS_DONE_S;
-  if (set.has(name)) set.delete(name); else set.add(name);
+  const set    = isVinos ? doneVinos : doneSpirits;
+  const lsKey  = isVinos ? LS_DONE_V : LS_DONE_S;
+  const wasDone = set.has(name);
+  if (wasDone) set.delete(name); else set.add(name);
   localStorage.setItem(lsKey, JSON.stringify([...set]));
   build();
+  // Sync a Supabase (no bloqueante)
+  const sector = isVinos ? 'vinos' : 'spirits';
+  const today  = new Date().toISOString().slice(0, 10);
+  fetch('/.netlify/functions/agenda-data', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      action: wasDone ? 'del-registro' : 'add-registro',
+      fecha: today, sector, proveedor: name,
+    }),
+  }).catch(() => {});
 }
 
 function switchTab(tab) {
