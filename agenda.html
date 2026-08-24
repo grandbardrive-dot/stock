@@ -15,189 +15,149 @@
   <style>
     body { background: #0f0f0f; color: #e8e0d0; }
 
-    /* ── HEADER ── */
     .ag-header {
       position: sticky; top: 0; z-index: 100;
-      background: #151515;
-      border-bottom: 2px solid #c9a84c;
+      background: #151515; border-bottom: 2px solid #c9a84c;
       padding-top: env(safe-area-inset-top, 0);
     }
-    .ag-topbar {
-      display: flex; align-items: center; gap: 10px;
-      padding: 14px 16px 10px;
-    }
-    .back-btn {
-      background: none; border: none; color: #c9a84c;
-      font-size: 28px; line-height: 1; cursor: pointer; padding: 0 4px 0 0;
-    }
-    .ag-topbar h1 {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 22px; font-weight: 800; text-transform: uppercase;
-      letter-spacing: 1px; color: #fff; margin: 0;
-    }
+    .ag-topbar { display:flex; align-items:center; gap:10px; padding:14px 16px 10px; }
+    .back-btn { background:none; border:none; color:#c9a84c; font-size:28px; line-height:1; cursor:pointer; padding:0 4px 0 0; }
+    .ag-topbar h1 { font-family:'Barlow Condensed',sans-serif; font-size:22px; font-weight:800; text-transform:uppercase; letter-spacing:1px; color:#fff; margin:0; }
 
-    /* ── TABS ── */
-    .ag-tabs {
-      display: flex; gap: 0;
-      border-top: 1px solid #222;
-    }
+    /* Tabs */
+    .ag-tabs { display:flex; border-top:1px solid #222; }
     .ag-tab {
-      flex: 1; background: none; border: none; border-bottom: 3px solid transparent;
-      padding: 10px 8px;
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 14px; font-weight: 700; text-transform: uppercase;
-      letter-spacing: .6px; color: #555; cursor: pointer;
-      transition: color .15s, border-color .15s;
+      flex:1; background:none; border:none; border-bottom:3px solid transparent;
+      padding:10px 8px;
+      font-family:'Barlow Condensed',sans-serif; font-size:14px; font-weight:700;
+      text-transform:uppercase; letter-spacing:.6px; color:#555; cursor:pointer;
+      transition:color .15s,border-color .15s;
     }
-    .ag-tab.active { color: #c9a84c; border-bottom-color: #c9a84c; }
-    .ag-tab-user { font-size: 10px; font-weight: 400; color: #444; display: block; margin-top: 1px; }
-    .ag-tab.active .ag-tab-user { color: #8a7040; }
+    .ag-tab.active { color:#c9a84c; border-bottom-color:#c9a84c; }
+    .ag-tab-user { font-size:10px; font-weight:400; color:#444; display:block; margin-top:1px; }
+    .ag-tab.active .ag-tab-user { color:#8a7040; }
 
-    /* ── CONFIG ROW ── */
-    .ag-config {
-      display: flex; align-items: center; gap: 8px;
-      padding: 8px 16px 10px;
-      border-top: 1px solid #1e1e1e;
-      flex-wrap: wrap;
-    }
-    .ag-config-label { font-size: 12px; color: #666; white-space: nowrap; }
-
-    /* Target selector */
-    .target-seg {
-      display: flex; border: 1px solid #2a2a2a; border-radius: 6px; overflow: hidden;
-    }
+    /* Config */
+    .ag-config { display:flex; align-items:center; gap:8px; padding:8px 16px 10px; border-top:1px solid #1e1e1e; flex-wrap:wrap; }
+    .ag-config-label { font-size:12px; color:#666; white-space:nowrap; }
+    .target-seg { display:flex; border:1px solid #2a2a2a; border-radius:6px; overflow:hidden; }
     .target-seg button {
-      background: #1a1a1a; border: none; color: #888;
-      padding: 5px 10px; font-size: 12px; cursor: pointer;
-      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
-      transition: background .15s, color .15s;
+      background:#1a1a1a; border:none; color:#888;
+      padding:5px 10px; font-size:12px; cursor:pointer;
+      font-family:'Barlow Condensed',sans-serif; font-weight:700;
+      transition:background .15s,color .15s;
     }
-    .target-seg button.active { background: #c9a84c; color: #111; }
-    .target-seg button + button { border-left: 1px solid #2a2a2a; }
-
+    .target-seg button.active { background:#c9a84c; color:#111; }
+    .target-seg button + button { border-left:1px solid #2a2a2a; }
     .reset-btn {
-      margin-left: auto;
-      background: none; border: 1px solid #2a1a1a; color: #6a4040;
-      padding: 5px 10px; font-size: 11px; border-radius: 6px;
-      cursor: pointer; font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
-      text-transform: uppercase; letter-spacing: .5px;
+      margin-left:auto; background:none; border:1px solid #2a1a1a; color:#6a4040;
+      padding:5px 10px; font-size:11px; border-radius:6px; cursor:pointer;
+      font-family:'Barlow Condensed',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.5px;
     }
-    .reset-btn:hover { border-color: #c04040; color: #c04040; }
+    .reset-btn:hover { border-color:#c04040; color:#c04040; }
 
-    /* ── STATS ── */
-    .ag-stats {
-      display: flex; background: #111; border-bottom: 1px solid #1e1e1e;
-    }
-    .ag-stat {
-      flex: 1; text-align: center; padding: 9px 4px;
-      border-right: 1px solid #1e1e1e;
-    }
-    .ag-stat:last-child { border-right: none; }
-    .ag-stat-num {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 20px; font-weight: 800; color: #c9a84c; line-height: 1;
-    }
-    .ag-stat-lbl { font-size: 9px; color: #555; text-transform: uppercase; margin-top: 2px; }
+    /* Stats */
+    .ag-stats { display:flex; background:#111; border-bottom:1px solid #1e1e1e; }
+    .ag-stat { flex:1; text-align:center; padding:9px 4px; border-right:1px solid #1e1e1e; }
+    .ag-stat:last-child { border-right:none; }
+    .ag-stat-num { font-family:'Barlow Condensed',sans-serif; font-size:20px; font-weight:800; color:#c9a84c; line-height:1; }
+    .ag-stat-lbl { font-size:9px; color:#555; text-transform:uppercase; margin-top:2px; }
 
-    /* ── BODY ── */
-    .ag-body { padding: 10px 12px 90px; }
+    /* Body */
+    .ag-body { padding:10px 12px 90px; }
 
     .sec-title {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 12px; font-weight: 700; text-transform: uppercase;
-      letter-spacing: 1px; color: #c9a84c;
-      margin: 16px 0 7px 2px;
-      display: flex; align-items: center; gap: 8px;
+      font-family:'Barlow Condensed',sans-serif; font-size:12px; font-weight:700;
+      text-transform:uppercase; letter-spacing:1px; color:#c9a84c;
+      margin:16px 0 7px 2px; display:flex; align-items:center; gap:8px;
     }
     .sec-title::after { content:''; flex:1; height:1px; background:#1e1e1e; }
 
-    /* ── SESSION CARD ── */
+    /* Session card */
     .s-card {
-      background: #191919;
-      border: 1px solid #242424;
-      border-radius: 10px;
-      margin-bottom: 8px;
-      overflow: hidden;
-      transition: border-color .15s;
+      background:#191919; border:1px solid #242424; border-radius:10px;
+      margin-bottom:8px; overflow:hidden; transition:border-color .15s;
     }
-    .s-card.is-next  { border-color: #c9a84c; }
-    .s-card.is-done  { opacity: .45; }
-    .s-card.is-overdue { border-color: #904030; }
+    .s-card.is-next   { border-color:#c9a84c; }
+    .s-card.is-done   { opacity:.4; }
+    .s-card.is-partial{ border-color:#5a6a3a; }
 
     .s-header {
-      display: flex; align-items: center; gap: 10px;
-      padding: 11px 14px; cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
+      display:flex; align-items:center; gap:10px; padding:11px 14px;
+      cursor:pointer; -webkit-tap-highlight-color:transparent;
     }
-    .s-num {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 26px; font-weight: 800;
-      color: #2e2e2e; min-width: 32px; text-align: center; line-height: 1;
-    }
-    .s-card.is-next  .s-num { color: #c9a84c; }
-    .s-card.is-done  .s-num { color: #252525; }
+    .s-num { font-family:'Barlow Condensed',sans-serif; font-size:26px; font-weight:800; color:#2e2e2e; min-width:32px; text-align:center; line-height:1; }
+    .s-card.is-next .s-num   { color:#c9a84c; }
+    .s-card.is-done .s-num   { color:#252525; }
+    .s-card.is-partial .s-num{ color:#7a9a4a; }
 
-    .s-info { flex: 1; }
-    .s-date {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 16px; font-weight: 700; color: #ccc; letter-spacing: .2px;
-    }
-    .s-card.is-next .s-date { color: #fff; }
-    .s-meta { font-size: 10px; color: #555; margin-top: 2px; }
+    .s-info { flex:1; }
+    .s-date { font-family:'Barlow Condensed',sans-serif; font-size:16px; font-weight:700; color:#ccc; }
+    .s-card.is-next .s-date { color:#fff; }
+    .s-meta { font-size:10px; color:#555; margin-top:2px; }
+    .s-meta .warn { color:#c08030; }
 
-    .s-badge {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 10px; font-weight: 700; text-transform: uppercase;
-      padding: 3px 7px; border-radius: 20px; letter-spacing: .5px; white-space: nowrap;
-    }
+    .s-badge { font-family:'Barlow Condensed',sans-serif; font-size:10px; font-weight:700; text-transform:uppercase; padding:3px 7px; border-radius:20px; letter-spacing:.5px; white-space:nowrap; }
     .badge-next    { background:#c9a84c1a; color:#c9a84c; border:1px solid #c9a84c44; }
     .badge-done    { background:#1a2a1a; color:#4a8a4a; border:1px solid #253525; }
-    .badge-overdue { background:#2a1818; color:#904030; border:1px solid #3a2020; }
+    .badge-partial { background:#2a3a1a; color:#7a9a4a; border:1px solid #3a5a2a; }
 
-    .s-chevron { color: #333; font-size: 16px; transition: transform .2s; }
-    .s-card.is-open .s-chevron { transform: rotate(180deg); }
+    .s-chevron { color:#333; font-size:16px; transition:transform .2s; }
+    .s-card.is-open .s-chevron { transform:rotate(180deg); }
 
-    /* ── SESSION BODY ── */
-    .s-body { display: none; border-top: 1px solid #1e1e1e; padding: 10px 14px 14px; }
-    .s-card.is-open .s-body { display: block; }
+    /* Session body */
+    .s-body { display:none; border-top:1px solid #1e1e1e; padding:10px 14px 14px; }
+    .s-card.is-open .s-body { display:block; }
 
+    /* Provider row inside session */
     .prov-row {
-      display: flex; align-items: center; gap: 8px;
-      padding: 7px 0; border-bottom: 1px solid #1c1c1c;
+      display:flex; align-items:center; gap:10px;
+      padding:9px 0; border-bottom:1px solid #1c1c1c;
     }
-    .prov-row:last-child { border-bottom: none; }
-    .prov-dot { width: 6px; height: 6px; border-radius: 50%; background: #2e2e2e; flex-shrink:0; }
+    .prov-row:last-child { border-bottom:none; }
+    .prov-row.is-done .prov-name { color:#3a6a3a; text-decoration:line-through; }
+    .prov-row.is-done .prov-meta { color:#2a2a2a; }
+
     .prov-name {
-      flex: 1;
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 14px; font-weight: 600; color: #bbb;
-      text-transform: uppercase; letter-spacing: .2px;
+      flex:1; font-family:'Barlow Condensed',sans-serif;
+      font-size:14px; font-weight:600; color:#bbb; text-transform:uppercase; letter-spacing:.2px;
     }
-    .prov-count { font-size: 10px; color: #555; white-space: nowrap; }
+    .prov-meta { font-size:10px; color:#555; white-space:nowrap; text-align:right; line-height:1.4; }
+    .prov-meta span { display:block; }
 
-    .s-action { padding: 10px 0 0; }
-    .mark-btn {
-      width: 100%; background: none; border: 1px solid #253525; color: #4a8a4a;
-      padding: 9px; border-radius: 8px;
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 13px; font-weight: 700; text-transform: uppercase;
-      letter-spacing: .5px; cursor: pointer;
-      transition: background .15s, border-color .15s;
+    /* Check button */
+    .prov-check {
+      width:30px; height:30px; border-radius:50%; flex-shrink:0;
+      border:2px solid #2e2e2e; background:none; color:#2e2e2e;
+      font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+      transition:border-color .15s, background .15s, color .15s;
+      -webkit-tap-highlight-color:transparent;
     }
-    .mark-btn:hover { background: #1a2a1a; }
-    .mark-btn.undo { border-color: #252535; color: #555577; }
+    .prov-check:hover { border-color:#c9a84c; color:#c9a84c; }
+    .prov-row.is-done .prov-check { border-color:#3a6a3a; background:#1a2a1a; color:#4a8a4a; }
 
-    /* ── FOOTER ── */
+    /* Workload bar */
+    .workload-bar { height:3px; background:#1e1e1e; border-radius:2px; margin:10px 0 6px; overflow:hidden; }
+    .workload-fill { height:100%; border-radius:2px; transition:width .3s; }
+    .workload-fill.ok  { background:#c9a84c; }
+    .workload-fill.full { background:#c06040; }
+
+    /* Note about carried over */
+    .carryover-note {
+      font-size:11px; color:#8a7040; padding:6px 10px;
+      background:#1e1a0e; border-radius:6px; margin-bottom:10px;
+      border:1px solid #2e2810;
+    }
+
+    /* Footer */
     .ag-footer {
-      position: fixed; bottom: 0; left: 0; right: 0;
-      background: #151515;
-      border-top: 1px solid #c9a84c33;
-      padding: 8px 16px calc(8px + env(safe-area-inset-bottom, 0));
-      z-index: 50;
+      position:fixed; bottom:0; left:0; right:0;
+      background:#151515; border-top:1px solid #c9a84c33;
+      padding:8px 16px calc(8px + env(safe-area-inset-bottom,0)); z-index:50;
     }
     .ag-footer-row { display:flex; justify-content:space-between; font-size:11px; color:#555; margin-bottom:5px; }
-    .ag-footer-bar { height: 3px; background: #1e1e1e; border-radius: 2px; overflow:hidden; }
-    .ag-footer-fill { height:100%; background:#c9a84c; border-radius:2px; transition: width .4s ease; }
+    .ag-footer-bar { height:3px; background:#1e1e1e; border-radius:2px; overflow:hidden; }
+    .ag-footer-fill { height:100%; background:#c9a84c; border-radius:2px; transition:width .4s; }
   </style>
 </head>
 <body>
@@ -208,36 +168,30 @@
     <h1>Agenda de Stock</h1>
   </div>
 
-  <!-- Tabs -->
   <div class="ag-tabs">
     <button class="ag-tab active" id="tab-vinos" onclick="switchTab('vinos')">
-      🍷 Vinos
-      <span class="ag-tab-user">Lucas Porro</span>
+      🍷 Vinos <span class="ag-tab-user">Lucas Porro</span>
     </button>
     <button class="ag-tab" id="tab-spirits" onclick="switchTab('spirits')">
-      🥃 Spirits & Gaseosas
-      <span class="ag-tab-user">Lucas Buenanueva</span>
+      🥃 Spirits & Gaseosas <span class="ag-tab-user">Lucas Buenanueva</span>
     </button>
   </div>
 
-  <!-- Config -->
   <div class="ag-config">
-    <span class="ag-config-label">Meta:</span>
-    <div class="target-seg" id="target-seg">
-      <button onclick="setTarget(1)">1 mes</button>
-      <button onclick="setTarget(2)" class="active">2 meses</button>
-      <button onclick="setTarget(3)">3 meses</button>
+    <span class="ag-config-label">Vel. conteo:</span>
+    <div class="target-seg" id="seg-speed">
+      <button onclick="setSpeed(30)">Rápido<br><small>30s/ítem</small></button>
+      <button onclick="setSpeed(45)" class="active">Normal<br><small>45s/ítem</small></button>
+      <button onclick="setSpeed(60)">Lento<br><small>1min/ítem</small></button>
     </div>
-    <span class="ag-config-label" id="per-label" style="color:#666;margin-left:4px"></span>
     <button class="reset-btn" onclick="confirmReset()">↺ Reiniciar</button>
   </div>
 
-  <!-- Stats -->
-  <div class="ag-stats" id="ag-stats">
-    <div class="ag-stat"><div class="ag-stat-num" id="s-provs">—</div><div class="ag-stat-lbl">Proveedores</div></div>
-    <div class="ag-stat"><div class="ag-stat-num" id="s-lunEst">—</div><div class="ag-stat-lbl">Lunes</div></div>
-    <div class="ag-stat"><div class="ag-stat-num" id="s-pps">—</div><div class="ag-stat-lbl">Por sesión</div></div>
-    <div class="ag-stat"><div class="ag-stat-num" id="s-done">0</div><div class="ag-stat-lbl">Hechas</div></div>
+  <div class="ag-stats">
+    <div class="ag-stat"><div class="ag-stat-num" id="s-total">—</div><div class="ag-stat-lbl">Proveedores</div></div>
+    <div class="ag-stat"><div class="ag-stat-num" id="s-done">0</div><div class="ag-stat-lbl">Hechos</div></div>
+    <div class="ag-stat"><div class="ag-stat-num" id="s-lunes">—</div><div class="ag-stat-lbl">Lunes rest.</div></div>
+    <div class="ag-stat"><div class="ag-stat-num" id="s-meses">—</div><div class="ag-stat-lbl">Meses aprox.</div></div>
   </div>
 </header>
 
@@ -253,7 +207,7 @@
 
 <script src="productos.js"></script>
 <script>
-// ── INACTIVAS VINOS ────────────────────────────────────────────
+// ── BODEGAS INACTIVAS (solo vinos) ────────────────────────────
 const INACTIVAS_VINOS = new Set([
   'BODEGA ACHAVAL FERRER','BODEGA ALTOS LAS HORMIGAS','BODEGA AMALAYA',
   'BODEGA BARBERIS','BODEGA BIANCHI','BODEGA CAVAS ROSELL BOHER',
@@ -272,17 +226,20 @@ const INACTIVAS_VINOS = new Set([
   'BODEGA TUPUN','BODEGA VIÑA LOS CHOCOS','BODEGA ZORZAL',
 ]);
 
-// ── CONFIG ────────────────────────────────────────────────────
-const LS_DONE_V  = 'grandbar_agenda_vinos_done';
-const LS_DONE_S  = 'grandbar_agenda_spirits_done';
-const LS_TARGET  = 'grandbar_agenda_target';
-const LS_TAB     = 'grandbar_agenda_tab';
-const WEEKS_PER_MONTH = 4.33;
+// ── CONSTANTES ────────────────────────────────────────────────
+const SESSION_MIN  = 180;          // capacidad de la sesión en minutos (9 a 12hs)
+const WEEKS_PER_MO = 4.33;
 
-let currentTab   = localStorage.getItem(LS_TAB) || 'vinos';
-let targetMonths = parseInt(localStorage.getItem(LS_TARGET) || '2', 10);
-let doneVinos    = new Set(JSON.parse(localStorage.getItem(LS_DONE_V) || '[]'));
-let doneSpirits  = new Set(JSON.parse(localStorage.getItem(LS_DONE_S) || '[]'));
+// ── PERSISTENCIA ──────────────────────────────────────────────
+const LS_DONE_V  = 'ag2_done_vinos';
+const LS_DONE_S  = 'ag2_done_spirits';
+const LS_SPEED   = 'ag2_speed';
+const LS_TAB     = 'ag2_tab';
+
+let currentTab  = localStorage.getItem(LS_TAB)   || 'vinos';
+let secPerItem  = parseInt(localStorage.getItem(LS_SPEED) || '45', 10);
+let doneVinos   = new Set(JSON.parse(localStorage.getItem(LS_DONE_V)  || '[]'));
+let doneSpirits = new Set(JSON.parse(localStorage.getItem(LS_DONE_S)  || '[]'));
 
 // ── EXTRACCIÓN DE PROVEEDORES ─────────────────────────────────
 function getProveedores(productos, inactivas) {
@@ -293,185 +250,228 @@ function getProveedores(productos, inactivas) {
     map[prov] = (map[prov] || 0) + 1;
   });
   return Object.entries(map)
-    .map(([name, count]) => ({ name, count }))
+    .map(([name, count]) => ({ name, count, minEst: Math.round(count * secPerItem / 60) }))
     .sort((a, b) => b.count - a.count);
 }
 
-// ── DISTRIBUCIÓN BALANCEADA ───────────────────────────────────
-// Greedy: menor carga total primero
-function distribute(provs, perSession) {
-  const n = Math.ceil(provs.length / perSession);
-  const buckets = Array.from({ length: n }, () => ({ provs: [], total: 0 }));
+// ── DISTRIBUCIÓN POR TIEMPO ───────────────────────────────────
+// Greedy: mete proveedores de mayor a menor hasta llenar la sesión.
+// Si un proveedor solo ya supera la capacidad → sesión propia.
+function buildSchedule(provs, doneSet) {
+  const pending  = provs.filter(p => !doneSet.has(p.name));
+  const done     = provs.filter(p =>  doneSet.has(p.name));
+  const sessions = [];
+  let   current  = { provs: [], totalMin: 0 };
 
-  provs.forEach(p => {
-    let best = 0;
-    buckets.forEach((b, i) => {
-      if (b.provs.length < perSession &&
-          (buckets[best].provs.length >= perSession || b.total < buckets[best].total)) {
-        best = i;
-      }
-    });
-    buckets[best].provs.push(p);
-    buckets[best].total += p.count;
+  pending.forEach(p => {
+    if (current.totalMin > 0 && current.totalMin + p.minEst > SESSION_MIN) {
+      sessions.push({ ...current });
+      current = { provs: [], totalMin: 0 };
+    }
+    current.provs.push(p);
+    current.totalMin += p.minEst;
   });
-  return buckets;
+  if (current.provs.length) sessions.push(current);
+
+  return { sessions, done };
 }
 
-// ── FECHAS ───────────────────────────────────────────────────
-function nextMonday(from = new Date()) {
-  const d = new Date(from); d.setHours(0,0,0,0);
+// ── FECHAS ────────────────────────────────────────────────────
+function nextMonday() {
+  const d = new Date(); d.setHours(0,0,0,0);
   const dow = d.getDay();
   d.setDate(d.getDate() + (dow === 1 ? 0 : (8 - dow) % 7 || 7));
   return d;
 }
 function addWeeks(d, n) { const r = new Date(d); r.setDate(r.getDate() + n * 7); return r; }
-function dateKey(d) { return d.toISOString().slice(0, 10); }
 function fmtDate(d) {
   const DS = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
   const MS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
   return `${DS[d.getDay()]} ${d.getDate()} ${MS[d.getMonth()]} ${d.getFullYear()}`;
 }
-
-// ── CALCULAR PER-SESSION PARA EL TARGET ──────────────────────
-function calcPerSession(total, months) {
-  const targetSessions = Math.round(months * WEEKS_PER_MONTH);
-  return Math.max(1, Math.ceil(total / targetSessions));
+function fmtHours(min) {
+  if (min < 60) return `${min}min`;
+  const h = Math.floor(min / 60), m = min % 60;
+  return m ? `${h}h ${m}min` : `${h}h`;
 }
 
 // ── BUILD & RENDER ────────────────────────────────────────────
 function build() {
-  const isVinos    = currentTab === 'vinos';
-  const productos  = isVinos
+  const isVinos   = currentTab === 'vinos';
+  const productos = isVinos
     ? (typeof PRODUCTOS_VINOS   !== 'undefined' ? PRODUCTOS_VINOS   : [])
     : (typeof PRODUCTOS_SPIRITS !== 'undefined' ? PRODUCTOS_SPIRITS : []);
-  const inactivas  = isVinos ? INACTIVAS_VINOS : new Set();
-  const doneSet    = isVinos ? doneVinos : doneSpirits;
+  const inactivas = isVinos ? INACTIVAS_VINOS : new Set();
+  const doneSet   = isVinos ? doneVinos : doneSpirits;
 
   const provs = getProveedores(productos, inactivas);
-  const perSession = calcPerSession(provs.length, targetMonths);
-  const sessions   = distribute(provs, perSession);
-  const nLunes     = sessions.length;
-  const meses      = (nLunes / WEEKS_PER_MONTH).toFixed(1);
+  const { sessions, done } = buildSchedule(provs, doneSet);
+
+  const totalProv  = provs.length;
+  const doneCount  = done.length;
+  const lunRest    = sessions.length;
+  const meses      = (lunRest / WEEKS_PER_MO).toFixed(1);
 
   // stats
-  document.getElementById('s-provs').textContent  = provs.length;
-  document.getElementById('s-lunEst').textContent = nLunes;
-  document.getElementById('s-pps').textContent    = perSession;
-  const doneCount = sessions.filter((_, i) => doneSet.has(dateKey(addWeeks(nextMonday(), i)))).length;
-  document.getElementById('s-done').textContent   = doneCount;
-  document.getElementById('per-label').textContent = `≈ ${meses} meses · ${perSession} por lunes`;
+  document.getElementById('s-total').textContent = totalProv;
+  document.getElementById('s-done').textContent  = doneCount;
+  document.getElementById('s-lunes').textContent = lunRest;
+  document.getElementById('s-meses').textContent = lunRest === 0 ? '¡0!' : meses;
 
-  // update target buttons
-  document.querySelectorAll('.target-seg button').forEach(b => {
-    b.classList.toggle('active', parseInt(b.textContent) === targetMonths);
+  // footer
+  const pct = totalProv ? Math.round(doneCount / totalProv * 100) : 0;
+  document.getElementById('footer-pct').textContent  = pct + '%';
+  document.getElementById('footer-fill').style.width = pct + '%';
+  document.getElementById('footer-txt').textContent  =
+    doneCount === totalProv
+      ? '¡Ciclo completo! Reiniciá para empezar de nuevo.'
+      : `${doneCount} de ${totalProv} proveedores hechos`;
+
+  // speed buttons
+  document.querySelectorAll('#seg-speed button').forEach(b => {
+    const s = parseInt(b.onclick.toString().match(/\d+/)[0]);
+    b.classList.toggle('active', s === secPerItem);
   });
 
-  // footer progress
-  const pct = nLunes ? Math.round((doneCount / nLunes) * 100) : 0;
-  document.getElementById('footer-pct').textContent = pct + '%';
-  document.getElementById('footer-fill').style.width = pct + '%';
-  document.getElementById('footer-txt').textContent =
-    doneCount === nLunes
-      ? '¡Ciclo completo! Reiniciá para empezar de nuevo.'
-      : doneCount === 0
-      ? `${nLunes} sesiones · ${provs.length} proveedores`
-      : `${doneCount} hechas · ${nLunes - doneCount} restantes`;
-
-  // render cards
-  const today = new Date(); today.setHours(0,0,0,0);
-  const first  = nextMonday();
-  const schedule = sessions.map((s, i) => ({
-    date: addWeeks(first, i),
-    provs: s.provs,
-    total: s.total,
-  }));
-
-  const nextSess = schedule.find(s => !doneSet.has(dateKey(s.date)) && s.date >= today);
-  const nextKey  = nextSess ? dateKey(nextSess.date) : null;
-
+  // render sessions
   const body = document.getElementById('ag-body');
   body.innerHTML = '';
+  const first = nextMonday();
 
-  const pending = schedule.filter(s => !doneSet.has(dateKey(s.date)));
-  const done    = schedule.filter(s =>  doneSet.has(dateKey(s.date)));
-
-  if (pending.length) {
-    body.appendChild(secTitle('Próximas sesiones'));
-    pending.forEach((s, i) => body.appendChild(
-      makeCard(s, i + 1, doneSet, today, nextKey, isVinos)
-    ));
+  if (sessions.length === 0 && done.length > 0) {
+    body.innerHTML = '<div style="padding:2rem;text-align:center;color:#4a8a4a;font-family:\'Barlow Condensed\',sans-serif;font-size:18px;font-weight:700;">¡Ciclo completo! 🎉<br><span style="font-size:13px;color:#555;font-weight:400">Reiniciá el ciclo para empezar de nuevo.</span></div>';
+    return;
   }
-  if (done.length) {
-    body.appendChild(secTitle('Completadas'));
-    done.forEach((s, i) => body.appendChild(
-      makeCard(s, schedule.indexOf(s) + 1, doneSet, today, nextKey, isVinos)
-    ));
-  }
-}
 
-function secTitle(text) {
-  const d = document.createElement('div');
-  d.className = 'sec-title'; d.textContent = text; return d;
-}
+  // ¿Cuántos proveedores del primer lunes ya estaban "cargados"?
+  // (vienen de semanas anteriores perdidas — los que quedan primero)
+  sessions.forEach((sess, i) => {
+    const date = addWeeks(first, i);
+    const isNext = i === 0;
 
-function makeCard(session, idx, doneSet, today, nextKey, isVinos) {
-  const key    = dateKey(session.date);
-  const isDone = doneSet.has(key);
-  const isNext = key === nextKey;
-  const isOvrd = !isDone && session.date < today;
-  const isOpen = isNext;
+    // ¿Hay proveedores parcialmente hechos en esta sesión?
+    const doneInSess = sess.provs.filter(p => doneSet.has(p.name)).length;
+    const isDone     = doneInSess === sess.provs.length;
+    const isPartial  = doneInSess > 0 && !isDone;
 
-  const card = document.createElement('div');
-  card.className = 's-card' +
-    (isDone ? ' is-done' : '') +
-    (isNext ? ' is-next' : '') +
-    (isOvrd ? ' is-overdue' : '') +
-    (isOpen ? ' is-open' : '');
-  card.id = 'card-' + key;
+    const card = document.createElement('div');
+    card.className = 's-card' +
+      (isNext && !isDone ? ' is-next' : '') +
+      (isDone ? ' is-done' : '') +
+      (isPartial ? ' is-partial' : '');
+    card.id = 'sess-' + i;
 
-  let badge = '';
-  if (isNext)    badge = '<span class="s-badge badge-next">Próxima</span>';
-  else if (isDone)    badge = '<span class="s-badge badge-done">✓ Hecha</span>';
-  else if (isOvrd)    badge = '<span class="s-badge badge-overdue">Vencida</span>';
+    // Estimate total time for the session
+    const totalMin   = sess.totalMin;
+    const fillPct    = Math.min(totalMin / SESSION_MIN * 100, 100);
+    const isFull     = totalMin >= SESSION_MIN * 0.9;
 
-  const provRows = session.provs.map(p =>
-    `<div class="prov-row">
-      <div class="prov-dot"></div>
-      <div class="prov-name">${p.name}</div>
-      <div class="prov-count">${p.count} ítem${p.count !== 1 ? 's' : ''}</div>
-    </div>`
-  ).join('');
+    let badge = '';
+    if (isNext && !isDone)    badge = '<span class="s-badge badge-next">Próxima</span>';
+    else if (isDone)          badge = '<span class="s-badge badge-done">✓ Hecha</span>';
+    else if (isPartial)       badge = '<span class="s-badge badge-partial">En progreso</span>';
 
-  const actionBtn = isDone
-    ? `<button class="mark-btn undo" onclick="toggleDone('${key}', false, ${isVinos})">↩ Marcar como pendiente</button>`
-    : `<button class="mark-btn"      onclick="toggleDone('${key}', true, ${isVinos})">✓ Marcar como realizada</button>`;
-
-  card.innerHTML = `
-    <div class="s-header" onclick="toggleCard('${key}')">
-      <div class="s-num">${String(idx).padStart(2,'0')}</div>
-      <div class="s-info">
-        <div class="s-date">${fmtDate(session.date)}</div>
-        <div class="s-meta">${session.provs.length} proveedores · ${session.total} ítems est.</div>
+    card.innerHTML = `
+      <div class="s-header" onclick="toggleCard('sess-${i}')">
+        <div class="s-num">${String(i+1).padStart(2,'0')}</div>
+        <div class="s-info">
+          <div class="s-date">${fmtDate(date)}</div>
+          <div class="s-meta">
+            ${sess.provs.length} proveedores · ${fmtHours(totalMin)} est.
+            ${totalMin > SESSION_MIN ? '<span class="warn"> ⚠ supera las 3hs</span>' : ''}
+          </div>
+        </div>
+        ${badge}
+        <div class="s-chevron">⌄</div>
       </div>
-      ${badge}
-      <div class="s-chevron">⌄</div>
-    </div>
-    <div class="s-body">
-      ${provRows}
-      <div class="s-action">${actionBtn}</div>
-    </div>
-  `;
-  return card;
+      <div class="s-body" id="body-sess-${i}">
+        <div class="workload-bar">
+          <div class="workload-fill ${isFull ? 'full' : 'ok'}" style="width:${fillPct}%"></div>
+        </div>
+        <div id="provs-sess-${i}"></div>
+      </div>
+    `;
+
+    body.appendChild(card);
+
+    // Si es la primera sesión, abrirla
+    if (isNext || (i === 0 && !isDone)) card.classList.add('is-open');
+
+    // Renderizar proveedores
+    const provsDiv = document.getElementById('provs-sess-' + i);
+
+    // Nota si hay carryover (proveedores que venían de semanas anteriores perdidas)
+    if (i === 0 && firstMondayIsToday()) {
+      // no mostramos nota — es la sesión de hoy
+    }
+
+    sess.provs.forEach(p => {
+      const isDoneProv = doneSet.has(p.name);
+      const row = document.createElement('div');
+      row.className = 'prov-row' + (isDoneProv ? ' is-done' : '');
+      row.id = 'prow-' + encodeURIComponent(p.name);
+      row.innerHTML = `
+        <div class="prov-name">${p.name}</div>
+        <div class="prov-meta">
+          <span>${p.count} ítems</span>
+          <span style="color:#444">${fmtHours(p.minEst)}</span>
+        </div>
+        <button class="prov-check" onclick="toggleProv(${JSON.stringify(p.name)}, ${isVinos})" aria-label="Marcar ${p.name} como hecho">
+          ${isDoneProv ? '✓' : ''}
+        </button>
+      `;
+      provsDiv.appendChild(row);
+    });
+  });
+
+  // Sección de hechos (colapsada)
+  if (done.length) {
+    const h = document.createElement('div');
+    h.className = 'sec-title';
+    h.textContent = `Completados (${done.length})`;
+    body.appendChild(h);
+
+    const doneCard = document.createElement('div');
+    doneCard.className = 's-card is-done';
+    doneCard.style.opacity = '.35';
+
+    const doneList = done.map(p =>
+      `<div class="prov-row is-done" style="padding:6px 0">
+        <div class="prov-name">${p.name}</div>
+        <div class="prov-meta"><span>${p.count} ítems</span></div>
+        <button class="prov-check" onclick="toggleProv(${JSON.stringify(p.name)}, ${isVinos})" style="border-color:#1a3a1a;background:#1a2a1a;color:#3a6a3a">✓</button>
+      </div>`
+    ).join('');
+
+    doneCard.innerHTML = `
+      <div class="s-header" onclick="this.parentElement.classList.toggle('is-open')">
+        <div class="s-num" style="color:#253525">${done.length}</div>
+        <div class="s-info">
+          <div class="s-date" style="color:#3a6a3a">Proveedores completados</div>
+          <div class="s-meta">Tocá para ver — click individual para desmarcar</div>
+        </div>
+        <div class="s-chevron">⌄</div>
+      </div>
+      <div class="s-body">${doneList}</div>
+    `;
+    body.appendChild(doneCard);
+  }
 }
 
-function toggleCard(key) {
-  document.getElementById('card-' + key)?.classList.toggle('is-open');
+function firstMondayIsToday() {
+  const d = nextMonday();
+  const t = new Date(); t.setHours(0,0,0,0);
+  return d.getTime() === t.getTime();
 }
 
-function toggleDone(key, done, isVinos) {
-  const set = isVinos ? doneVinos : doneSpirits;
+function toggleCard(id) {
+  document.getElementById(id)?.classList.toggle('is-open');
+}
+
+function toggleProv(name, isVinos) {
+  const set   = isVinos ? doneVinos : doneSpirits;
   const lsKey = isVinos ? LS_DONE_V : LS_DONE_S;
-  if (done) set.add(key); else set.delete(key);
+  if (set.has(name)) set.delete(name); else set.add(name);
   localStorage.setItem(lsKey, JSON.stringify([...set]));
   build();
 }
@@ -479,27 +479,26 @@ function toggleDone(key, done, isVinos) {
 function switchTab(tab) {
   currentTab = tab;
   localStorage.setItem(LS_TAB, tab);
-  document.getElementById('tab-vinos').classList.toggle('active', tab === 'vinos');
-  document.getElementById('tab-spirits').classList.toggle('active', tab === 'spirits');
+  document.getElementById('tab-vinos').classList.toggle('active',    tab === 'vinos');
+  document.getElementById('tab-spirits').classList.toggle('active',  tab === 'spirits');
   build();
 }
 
-function setTarget(months) {
-  targetMonths = months;
-  localStorage.setItem(LS_TARGET, String(months));
+function setSpeed(s) {
+  secPerItem = s;
+  localStorage.setItem(LS_SPEED, String(s));
   build();
 }
 
 function confirmReset() {
-  const label = currentTab === 'vinos' ? 'Vinos (Lucas Porro)' : 'Spirits (Lucas Buenanueva)';
-  if (confirm(`¿Reiniciar el progreso de ${label}?`)) {
+  const label = currentTab === 'vinos' ? 'Vinos' : 'Spirits';
+  if (confirm(`¿Reiniciar todos los proveedores de ${label}? Se perderá el progreso.`)) {
     if (currentTab === 'vinos') { doneVinos.clear(); localStorage.removeItem(LS_DONE_V); }
     else { doneSpirits.clear(); localStorage.removeItem(LS_DONE_S); }
     build();
   }
 }
 
-// ── INIT ─────────────────────────────────────────────────────
 switchTab(currentTab);
 </script>
 </body>
