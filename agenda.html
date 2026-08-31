@@ -230,6 +230,17 @@ const INACTIVAS_VINOS = new Set([
 const SESSION_MIN  = 180;          // capacidad de la sesión en minutos (9 a 12hs)
 const WEEKS_PER_MO = 4.33;
 
+// ── SUPABASE DIRECTO (POST va directo — Netlify Function da 405 en POST) ──────
+const AG_SUPA_URL = 'https://owpsfpifeonwkvwxqovk.supabase.co';
+const AG_SUPA_KEY = 'sb_publishable_FiMoqDt6G15dP9vQOs3n6A_tzULT8YU';
+async function supaAgenda(path, opts = {}) {
+  const res = await fetch(AG_SUPA_URL + path, {
+    ...opts,
+    headers: { apikey: AG_SUPA_KEY, Authorization: 'Bearer ' + AG_SUPA_KEY, 'Content-Type': 'application/json', ...(opts.headers || {}) },
+  });
+  return { ok: res.ok, status: res.status };
+}
+
 // ── PERSISTENCIA ──────────────────────────────────────────────
 const LS_DONE_V  = 'ag2_done_vinos';
 const LS_DONE_S  = 'ag2_done_spirits';
@@ -525,17 +536,24 @@ function toggleProv(name, isVinos) {
   if (wasDone) set.delete(name); else set.add(name);
   localStorage.setItem(lsKey, JSON.stringify([...set]));
   build();
-  // Sync a Supabase (no bloqueante)
+  // Sync a Supabase directo (POST a Netlify Function da 405)
   const sector = isVinos ? 'vinos' : 'spirits';
   const today  = new Date().toISOString().slice(0, 10);
-  fetch('/.netlify/functions/agenda-data', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      action: wasDone ? 'del-registro' : 'mark-done',
-      fecha: today, sector, proveedor: name,
-    }),
-  }).catch(() => {});
+  (async () => {
+    // Siempre borramos primero
+    await supaAgenda(
+      `/rest/v1/agenda_registro?sector=eq.${encodeURIComponent(sector)}&proveedor=eq.${encodeURIComponent(name)}`,
+      { method: 'DELETE' }
+    ).catch(() => {});
+    if (!wasDone) {
+      // Marcar como hecho: done=true
+      await supaAgenda('/rest/v1/agenda_registro', {
+        method: 'POST',
+        headers: { Prefer: 'resolution=ignore-duplicates' },
+        body: JSON.stringify({ fecha: today, sector, proveedor: name, done: true }),
+      }).catch(() => {});
+    }
+  })();
 }
 
 function switchTab(tab) {
