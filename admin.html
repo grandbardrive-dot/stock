@@ -603,6 +603,18 @@ function switchAdminTab(tab) {
 // ══════════════════════════════════════════════════════
 // AGENDA — REGISTRO DE CALENDARIO
 // ══════════════════════════════════════════════════════
+const AG_URL = 'https://owpsfpifeonwkvwxqovk.supabase.co';
+const AG_KEY = 'sb_publishable_FiMoqDt6G15dP9vQOs3n6A_tzULT8YU';
+
+async function supaAg(path, opts = {}) {
+  const res = await fetch(AG_URL + path, {
+    ...opts,
+    headers: { apikey: AG_KEY, Authorization: 'Bearer ' + AG_KEY, 'Content-Type': 'application/json', ...(opts.headers || {}) },
+  });
+  const text = await res.text();
+  return { ok: res.ok, status: res.status, data: text ? JSON.parse(text) : null };
+}
+
 let agLoaded   = false;
 let agSector   = 'vinos';
 let agRegistro = [];  // [{fecha, sector, proveedor}]
@@ -610,8 +622,8 @@ let agRegistro = [];  // [{fecha, sector, proveedor}]
 async function loadAgenda() {
   agLoaded = true;
   try {
-    const r = await fetch('/.netlify/functions/agenda-data?action=registro');
-    agRegistro = r.ok ? await r.json() : [];
+    const { ok, data } = await supaAg('/rest/v1/agenda_registro?select=fecha,sector,proveedor,done&order=fecha.desc&limit=2000');
+    agRegistro = ok && Array.isArray(data) ? data : [];
   } catch { agRegistro = []; }
   renderCalendar();
 }
@@ -716,14 +728,13 @@ function renderCalendar() {
 async function calRemoveProv(fecha, proveedor) {
   if (!confirm(`¿Quitar "${proveedor}" del ${fecha}?`)) return;
   try {
-    const res = await fetch('/.netlify/functions/agenda-data', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'del-registro', fecha, sector: agSector, proveedor }),
-    });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const { ok } = await supaAg(
+      `/rest/v1/agenda_registro?sector=eq.${encodeURIComponent(agSector)}&proveedor=eq.${encodeURIComponent(proveedor)}`,
+      { method: 'DELETE' }
+    );
+    if (!ok) throw new Error('Supabase DELETE falló');
   } catch (e) {
-    showToast('⚠ Error al guardar: ' + e.message, false);
+    showToast('⚠ Error al quitar: ' + e.message, false);
     return;
   }
   agRegistro = agRegistro.filter(r => !(r.sector === agSector && r.proveedor === proveedor));
@@ -816,23 +827,30 @@ async function modalToggleProv(proveedor) {
     agRegistro.filter(r => r.sector === agSector && r.fecha === modalFecha).map(r => r.proveedor)
   );
   const isInToday = todaySet.has(proveedor);
-  const action = isInToday ? 'del-registro' : 'add-registro';
 
   try {
-    const res = await fetch('/.netlify/functions/agenda-data', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action, fecha: modalFecha, sector: agSector, proveedor }),
-    });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
+    // Siempre borramos primero (para mover o quitar)
+    await supaAg(
+      `/rest/v1/agenda_registro?sector=eq.${encodeURIComponent(agSector)}&proveedor=eq.${encodeURIComponent(proveedor)}`,
+      { method: 'DELETE' }
+    );
+    if (!isInToday) {
+      // Agregar al día seleccionado
+      const { ok, data } = await supaAg('/rest/v1/agenda_registro', {
+        method: 'POST',
+        headers: { Prefer: 'resolution=ignore-duplicates' },
+        body: JSON.stringify({ fecha: modalFecha, sector: agSector, proveedor, done: false }),
+      });
+      if (!ok) throw new Error('Error al guardar: ' + JSON.stringify(data).slice(0, 80));
+    }
   } catch (e) {
-    showToast('⚠ Error al guardar: ' + e.message, false);
-    return; // no actualizar localmente si falló
+    showToast('⚠ ' + e.message, false);
+    return;
   }
 
-  // actualizar agRegistro local solo si el servidor confirmó
+  // Actualizar estado local
   agRegistro = agRegistro.filter(r => !(r.sector === agSector && r.proveedor === proveedor));
-  if (!isInToday) agRegistro.push({ fecha: modalFecha, sector: agSector, proveedor });
+  if (!isInToday) agRegistro.push({ fecha: modalFecha, sector: agSector, proveedor, done: false });
 
   renderModalList();
   renderCalendar();
