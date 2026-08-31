@@ -532,7 +532,7 @@ function toggleProv(name, isVinos) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      action: wasDone ? 'del-registro' : 'add-registro',
+      action: wasDone ? 'del-registro' : 'mark-done',
       fecha: today, sector, proveedor: name,
     }),
   }).catch(() => {});
@@ -576,13 +576,20 @@ function confirmReset() {
       const newDoneS = new Set();
 
       rows.forEach(r => {
-        const map = r.sector === 'vinos' ? registroVinos : registroSpirits;
-        if (!map.has(r.fecha)) map.set(r.fecha, new Set());
-        map.get(r.fecha).add(r.proveedor);
-        // Solo fechas pasadas = hechos (hoy no cuenta aún)
-        if (r.fecha < today) {
+        if (r.done) {
+          // Marcado explícitamente hecho por los chicos → siempre en doneSet
           if (r.sector === 'vinos')   newDoneV.add(r.proveedor);
           if (r.sector === 'spirits') newDoneS.add(r.proveedor);
+        } else {
+          // Asignado por Laura → va al mapa de registro para el calendario
+          const map = r.sector === 'vinos' ? registroVinos : registroSpirits;
+          if (!map.has(r.fecha)) map.set(r.fecha, new Set());
+          map.get(r.fecha).add(r.proveedor);
+          // Fechas pasadas sin marcar done = también hechos (asignados y ya pasaron)
+          if (r.fecha < today) {
+            if (r.sector === 'vinos')   newDoneV.add(r.proveedor);
+            if (r.sector === 'spirits') newDoneS.add(r.proveedor);
+          }
         }
       });
 
@@ -594,13 +601,6 @@ function confirmReset() {
       dbg = `❌ HTTP ${res.status}`;
     }
   } catch(e) { dbg = '❌ ' + e.message; }
-
-  // Debug banner temporal
-  const banner = document.createElement('div');
-  banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#1a1a00;color:#ffff00;font-size:13px;padding:6px 12px;text-align:center;font-family:monospace';
-  banner.textContent = 'DB: ' + dbg + ' | vinos=' + registroVinos.size + ' fechas | spirits=' + registroSpirits.size + ' fechas';
-  document.body.appendChild(banner);
-  setTimeout(() => banner.remove(), 15000);
 
   switchTab(currentTab);
 })();

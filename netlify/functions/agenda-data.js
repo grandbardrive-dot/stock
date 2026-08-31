@@ -31,7 +31,7 @@ exports.handler = async (event) => {
   if (event.httpMethod === 'GET') {
     if (action === 'registro') {
       const { data } = await supa(
-        '/rest/v1/agenda_registro?select=fecha,sector,proveedor&order=fecha.desc&limit=2000'
+        '/rest/v1/agenda_registro?select=fecha,sector,proveedor,done&order=fecha.desc&limit=2000'
       );
       return { statusCode: 200, headers: CORS, body: JSON.stringify(data || []) };
     }
@@ -54,7 +54,7 @@ exports.handler = async (event) => {
     const { action: act, fecha, sector, proveedor } = body;
 
     if (act === 'add-registro') {
-      // Si ya existe en otro día, lo movemos (delete + insert)
+      // Asignación de Laura: done=false, mueve si ya existe
       await supa(
         `/rest/v1/agenda_registro?sector=eq.${encodeURIComponent(sector)}&proveedor=eq.${encodeURIComponent(proveedor)}`,
         { method: 'DELETE' }
@@ -62,7 +62,21 @@ exports.handler = async (event) => {
       const { ok } = await supa('/rest/v1/agenda_registro', {
         method: 'POST',
         headers: { Prefer: 'resolution=ignore-duplicates' },
-        body: JSON.stringify({ fecha, sector, proveedor }),
+        body: JSON.stringify({ fecha, sector, proveedor, done: false }),
+      });
+      return { statusCode: ok ? 200 : 500, headers: CORS, body: JSON.stringify({ ok }) };
+    }
+
+    if (act === 'mark-done') {
+      // Chico marca hecho: done=true
+      await supa(
+        `/rest/v1/agenda_registro?sector=eq.${encodeURIComponent(sector)}&proveedor=eq.${encodeURIComponent(proveedor)}`,
+        { method: 'DELETE' }
+      );
+      const { ok } = await supa('/rest/v1/agenda_registro', {
+        method: 'POST',
+        headers: { Prefer: 'resolution=ignore-duplicates' },
+        body: JSON.stringify({ fecha, sector, proveedor, done: true }),
       });
       return { statusCode: ok ? 200 : 500, headers: CORS, body: JSON.stringify({ ok }) };
     }
