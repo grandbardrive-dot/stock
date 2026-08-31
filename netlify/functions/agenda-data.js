@@ -30,10 +30,18 @@ exports.handler = async (event) => {
   // ── GET ────────────────────────────────────────────────────────
   if (event.httpMethod === 'GET') {
     if (action === 'registro') {
-      const { data } = await supa(
+      const result = await supa(
         '/rest/v1/agenda_registro?select=fecha,sector,proveedor,done&order=fecha.desc&limit=2000'
       );
-      return { statusCode: 200, headers: CORS, body: JSON.stringify(data || []) };
+      if (!result.ok) {
+        // Columna done no existe todavía — intentar sin ella
+        const fallback = await supa(
+          '/rest/v1/agenda_registro?select=fecha,sector,proveedor&order=fecha.desc&limit=2000'
+        );
+        const rows = (fallback.data || []).map(r => ({ ...r, done: false }));
+        return { statusCode: 200, headers: CORS, body: JSON.stringify(rows) };
+      }
+      return { statusCode: 200, headers: CORS, body: JSON.stringify(result.data || []) };
     }
 
     if (action === 'exclusiones') {
@@ -59,12 +67,20 @@ exports.handler = async (event) => {
         `/rest/v1/agenda_registro?sector=eq.${encodeURIComponent(sector)}&proveedor=eq.${encodeURIComponent(proveedor)}`,
         { method: 'DELETE' }
       );
-      const { ok } = await supa('/rest/v1/agenda_registro', {
+      // Intentar con done=false; si falla (columna no existe aún), intentar sin done
+      let result = await supa('/rest/v1/agenda_registro', {
         method: 'POST',
         headers: { Prefer: 'resolution=ignore-duplicates' },
         body: JSON.stringify({ fecha, sector, proveedor, done: false }),
       });
-      return { statusCode: ok ? 200 : 500, headers: CORS, body: JSON.stringify({ ok }) };
+      if (!result.ok) {
+        result = await supa('/rest/v1/agenda_registro', {
+          method: 'POST',
+          headers: { Prefer: 'resolution=ignore-duplicates' },
+          body: JSON.stringify({ fecha, sector, proveedor }),
+        });
+      }
+      return { statusCode: result.ok ? 200 : 500, headers: CORS, body: JSON.stringify({ ok: result.ok, error: result.data }) };
     }
 
     if (act === 'mark-done') {
@@ -73,12 +89,20 @@ exports.handler = async (event) => {
         `/rest/v1/agenda_registro?sector=eq.${encodeURIComponent(sector)}&proveedor=eq.${encodeURIComponent(proveedor)}`,
         { method: 'DELETE' }
       );
-      const { ok } = await supa('/rest/v1/agenda_registro', {
+      // Intentar con done=true; fallback sin done (columna puede no existir aún)
+      let result = await supa('/rest/v1/agenda_registro', {
         method: 'POST',
         headers: { Prefer: 'resolution=ignore-duplicates' },
         body: JSON.stringify({ fecha, sector, proveedor, done: true }),
       });
-      return { statusCode: ok ? 200 : 500, headers: CORS, body: JSON.stringify({ ok }) };
+      if (!result.ok) {
+        result = await supa('/rest/v1/agenda_registro', {
+          method: 'POST',
+          headers: { Prefer: 'resolution=ignore-duplicates' },
+          body: JSON.stringify({ fecha, sector, proveedor }),
+        });
+      }
+      return { statusCode: result.ok ? 200 : 500, headers: CORS, body: JSON.stringify({ ok: result.ok }) };
     }
 
     if (act === 'del-registro') {
