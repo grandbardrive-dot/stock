@@ -25,14 +25,17 @@ exports.handler = async (event) => {
   }
 
   try {
-    // Paginar de a 5000 para no superar el límite de Supabase (PostgREST default = 1000)
-    const PAGE = 5000;
+    // Paginar de a 1000: Supabase devuelve como máximo 1000 filas por pedido aunque
+    // se pida más, y sin avisar. Con PAGE = 5000 el bucle cortaba en la primera
+    // página (1000 < 5000) y la app veía solo 1000 de ~6800 SKUs (22/10/2026).
+    // order=sku para que las páginas no se pisen ni salteen filas.
+    const PAGE = 1000;
     let all = [];
     let from = 0;
 
     while (true) {
       const res = await fetch(
-        `${SUPA_URL}/rest/v1/stock_sistema?select=sku,stock&limit=${PAGE}&offset=${from}`,
+        `${SUPA_URL}/rest/v1/stock_sistema?select=sku,stock&order=sku&limit=${PAGE}&offset=${from}`,
         {
           headers: {
             apikey: SUPA_KEY,
