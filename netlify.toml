@@ -5,4 +5,9 @@
 [functions]
   node_bundler = "esbuild"
 
+# Stock de Córdoba → stock_sistema cada hora, de 8 a 20 hs de Argentina (11 a 23 UTC),
+# de lunes a sábado. La tarea solo dispara sync-stock-background (ver el archivo).
+[functions."sync-stock-cron"]
+  schedule = "0 11-23 * * 1-6"
+
 # Sin redirects especiales — archivos estáticos se sirven directo

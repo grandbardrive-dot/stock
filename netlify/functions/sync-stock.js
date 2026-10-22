@@ -309,6 +309,41 @@ async function sincronizar({ dry = false } = {}) {
   };
 }
 
+// ── Registro de corridas (tabla sync_corridas) ───────────────
+// Anota cada corrida real (no las ?dry=1) para saber si la tarea programada
+// corrió y si falló. Si no se puede anotar, la sincronización sigue igual.
+async function sincronizarRegistrando(origen) {
+  let id = null;
+  try {
+    const r = await sb('sync_corridas', {
+      method: 'POST',
+      headers: { Prefer: 'return=representation' },
+      body: JSON.stringify({ origen }),
+    });
+    if (r.ok) id = (await r.json())[0]?.id ?? null;
+  } catch (e) { console.log('sync_corridas (inicio):', e.message); }
+
+  const cerrar = async (campos) => {
+    if (id == null) return;
+    try {
+      await sb(`sync_corridas?id=eq.${id}`, {
+        method: 'PATCH',
+        headers: { Prefer: 'return=minimal' },
+        body: JSON.stringify({ fin: new Date().toISOString(), ...campos }),
+      });
+    } catch (e) { console.log('sync_corridas (fin):', e.message); }
+  };
+
+  try {
+    const resultado = await sincronizar();
+    await cerrar({ ok: true, resumen: resultado });
+    return resultado;
+  } catch (e) {
+    await cerrar({ ok: false, error: String(e.message || e).slice(0, 1000) });
+    throw e;
+  }
+}
+
 // ── Handler ───────────────────────────────────────────────────
 exports.handler = async (event) => {
   // Cabeceras CORS para que admin.html pueda llamar a la función
@@ -331,7 +366,9 @@ exports.handler = async (event) => {
   }
 
   try {
-    const resultado = await sincronizar({ dry: qs.dry === '1' });
+    const resultado = qs.dry === '1'
+      ? await sincronizar({ dry: true })
+      : await sincronizarRegistrando('admin');
     return { statusCode: 200, headers, body: JSON.stringify(resultado) };
   } catch (e) {
     console.error('sync-stock ERROR:', e.message);
@@ -344,3 +381,4 @@ exports.handler = async (event) => {
 };
 
 exports.sincronizar = sincronizar;
+exports.sincronizarRegistrando = sincronizarRegistrando;
