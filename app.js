@@ -478,7 +478,7 @@ function initConteoForm({ sector, usuario, productos, proveedores, supaUrl, supa
     console.groupEnd();
 
     // Construir lista completa — excluir productos "Promo ..."
-    const conStock = productos
+    const todos = productos
       .filter(p => !p.articulo.startsWith('Promo '))
       .map(p => {
         const v     = values[p.sku] || {};
@@ -497,12 +497,16 @@ function initConteoForm({ sector, usuario, productos, proveedores, supaUrl, supa
           depo1, local, depo2, total,
           obs: v.obs || '',
         };
-      })
-      .filter(p => p.total > 0 || p.obs);
+      });
+
+    // El Excel y el mail listan TODOS los productos de las líneas elegidas, tengan o no stock físico
+    // (pedido 22/10/2026). "conStock" son los que se contaron (o tienen observación).
+    const conStock = todos.filter(p => p.total > 0 || p.obs);
+    const sinStock = todos.length - conStock.length;
 
     // ── Mensaje de email — agrupado por proveedor ──
     const gruposEmail = {};
-    conStock.forEach(p => {
+    todos.forEach(p => {
       const k = p.proveedor || '(Sin proveedor)';
       if (!gruposEmail[k]) gruposEmail[k] = [];
       gruposEmail[k].push(p);
@@ -529,7 +533,7 @@ function initConteoForm({ sector, usuario, productos, proveedores, supaUrl, supa
       `Responsable: ${usuario}`,
       `Fecha: ${fecha}`,
       provLine,
-      `Productos con stock: ${conStock.length} de ${productos.length}`,
+      `Contados: ${conStock.length} de ${todos.length} · Sin stock físico: ${sinStock}`,
       `Total unidades: ${totUnidades}`,
       '',
       ...lineas,
@@ -563,7 +567,7 @@ function initConteoForm({ sector, usuario, productos, proveedores, supaUrl, supa
       // Cabecera + datos
       // Columnas: SKU | Descripción | Stock Sistema | Promo | Depo 1 | Local | Depo 2 | Total | Diferencia
       // Diferencia = Total - (Stock Sistema + Promo)
-      const dataRows = conStock.map(p => [
+      const dataRows = todos.map(p => [
         p.sku,
         p.articulo,
         p.stock_sistema + p.promo,
@@ -613,6 +617,7 @@ function initConteoForm({ sector, usuario, productos, proveedores, supaUrl, supa
       };
       const styleDiffNeg = { font: { bold: true, color: { rgb: 'C0392B' } } };
       const styleDiffPos = { font: { bold: true, color: { rgb: '2E8B57' } } };
+      const styleSinStock = { font: { color: { rgb: '8a8f9a' } } };   // producto sin stock físico (no contado)
 
       if (ws['A1']) ws['A1'].s = styleTitulo;
       if (ws['A2']) ws['A2'].s = styleSubtitulo;
@@ -623,9 +628,10 @@ function initConteoForm({ sector, usuario, productos, proveedores, supaUrl, supa
       });
 
       // Columna I (Diferencia) = fila 5 en adelante
-      conStock.forEach((p, i) => {
+      todos.forEach((p, i) => {
         const diff    = p.total - (p.stock_sistema + p.promo);
         const rowNum  = i + 5;
+        if (p.total === 0 && !p.obs) { const b = ws[`B${rowNum}`]; if (b) b.s = styleSinStock; }
         const cellRef = `I${rowNum}`;
         if (ws[cellRef]) {
           ws[cellRef].s = diff < 0 ? styleDiffNeg : diff > 0 ? styleDiffPos : {};
@@ -643,11 +649,12 @@ function initConteoForm({ sector, usuario, productos, proveedores, supaUrl, supa
     }
 
     // ── Construir HTML del email ──
-    const filasTbody = conStock.map(p => {
+    const filasTbody = todos.map(p => {
       const diff     = p.total - (p.stock_sistema + p.promo);
       const diffColor = diff < 0 ? '#C0392B' : diff > 0 ? '#2E8B57' : '#8a8f9a';
       const obsCell  = p.obs ? `<em style="color:#8a8f9a">${p.obs}</em>` : '';
-      return `<tr>
+      const sinFisico = p.total === 0 && !p.obs;
+      return `<tr style="${sinFisico ? 'color:#8a8f9a' : ''}">
         <td style="font-family:monospace;font-size:12px;color:#8a8f9a">${p.sku}</td>
         <td>${p.articulo}${obsCell ? '<br>' + obsCell : ''}</td>
         <td style="text-align:center">${p.stock_sistema + p.promo}</td>
@@ -681,9 +688,9 @@ function initConteoForm({ sector, usuario, productos, proveedores, supaUrl, supa
               display:flex;gap:32px;flex-wrap:wrap">
     <div>
       <div style="font-size:11px;color:#8a8f9a;text-transform:uppercase;
-                  letter-spacing:1px">Productos con stock</div>
+                  letter-spacing:1px">Contados</div>
       <div style="font-size:28px;font-weight:800;color:#1F447F">${conStock.length}</div>
-      <div style="font-size:11px;color:#aaa">de ${productos.length} totales</div>
+      <div style="font-size:11px;color:#aaa">de ${todos.length} productos · ${sinStock} sin stock físico</div>
     </div>
     <div>
       <div style="font-size:11px;color:#8a8f9a;text-transform:uppercase;
