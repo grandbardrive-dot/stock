@@ -278,11 +278,12 @@ async function sincronizar({ dry = false } = {}) {
     batchesOk++;
   }
 
-  // 2) SKUs que están en la tabla pero AIKON ya no devuelve → stock 0 (no dato viejo)
+  // 2) SKUs que están en la tabla con stock ≠ 0 pero AIKON ya no devuelve → stock 0
+  //    (solo se miran los ≠ 0: los que ya están en 0 no hace falta tocarlos)
   const nuevos = new Set(l.rows.map(r => r.sku));
   let existentes = [];
   for (let from = 0; ; from += 1000) {
-    const r = await sb(`stock_sistema?select=sku&order=sku&limit=1000&offset=${from}`);
+    const r = await sb(`stock_sistema?select=sku&stock=neq.0&order=sku&limit=1000&offset=${from}`);
     if (!r.ok) break;
     const page = await r.json();
     existentes = existentes.concat(page.map(x => x.sku));
