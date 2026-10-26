@@ -2,8 +2,10 @@
 #  26/10/2026: APAGADA. La app de stock se mudó al Portal GrandBar
 #  (portalgrandbar.com/deposito.html y deposito-admin.html, función stock;
 #  el stock de Córdoba lo trae el Portal cada hora).
-#  Este sitio ya no tiene funciones ni tarea programada: cualquier dirección
-#  lleva al Depósito del Portal. Para volver a prenderla, revertir este commit.
+#  Este sitio ya no tiene funciones ni tarea programada. Cualquier dirección
+#  muestra recuperar.html: si en ese celular quedó un conteo a medio cargar,
+#  lo pasa al Portal; si no, manda directo al Depósito del Portal.
+#  Para volver a prenderla, revertir los commits del 26/10/2026.
 # ============================================================
 [build]
   publish   = "."
@@ -11,6 +13,6 @@
 
 [[redirects]]
   from   = "/*"
-  to     = "https://portalgrandbar.com/deposito.html"
-  status = 301
+  to     = "/recuperar.html"
+  status = 200
   force  = true

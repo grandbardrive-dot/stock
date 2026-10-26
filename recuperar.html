@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="theme-color" content="#0d2230">
+<title>GrandBar — Recuperar conteo</title>
+<!-- 26/10/2026: la app de stock se mudó al Portal y este sitio quedó apagado. Si en este
+     celular había un conteo a medio cargar (quedó guardado en el navegador, en este sitio),
+     esta página lo lee y lo pasa al Portal (deposito.html#recuperar=…), donde se sigue. -->
+<style>
+  body{margin:0;font-family:Inter,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background:#f5f1e8;color:#1b2a32}
+  .top{background:#0d2230;color:#fff;padding:16px 20px;font-weight:800;font-size:17px}
+  .top span{color:#c0912f}
+  .c{max-width:520px;margin:0 auto;padding:22px 18px}
+  .card{background:#fff;border:1px solid #e7ded0;border-radius:14px;padding:18px;margin-bottom:12px}
+  h1{font-size:21px;margin:0 0 8px}
+  p{color:#6d7d85;line-height:1.5;font-size:15px;margin:0 0 10px}
+  .n{font-size:30px;font-weight:800;color:#0d2230}
+  .btn{display:block;width:100%;border:0;border-radius:12px;padding:15px;font:inherit;font-size:16px;font-weight:800;background:#c0912f;color:#2a2007;cursor:pointer;text-align:center;text-decoration:none}
+  .btn.claro{background:#fff;color:#1b2a32;box-shadow:inset 0 0 0 1.5px #e7ded0;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="top">Grand<span>Bar</span> · Stock</div>
+<div class="c" id="c"></div>
+<script>
+  const leer = k => { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } };
+  const LBL = { vinos: 'Vinos', spirits: 'Spirits y Gaseosas' };
+  const borradores = {};
+  ['vinos', 'spirits'].forEach(s => {
+    const d = leer('grandbar_draft_' + s);
+    if (!d) return;
+    const values = d.values || d, provObs = d.provObs || {};   // las versiones viejas guardaban solo los valores
+    if (Object.keys(values).length || Object.keys(provObs).length) borradores[s] = { values, provObs };
+  });
+  const seleccion = leer('proveedores_seleccionados');
+  const c = document.getElementById('c');
+  const sectores = Object.keys(borradores);
+  if (!sectores.length) {
+    // Nada para recuperar: directo al Portal (esto se ve solo si el navegador no redirige).
+    location.replace('https://portalgrandbar.com/deposito.html');
+    c.innerHTML = `<div class="card"><h1>No hay ningún conteo en curso en este celular</h1>
+      <p>Si el conteo lo estabas cargando en otro celular (o en otro navegador), abrí esta misma dirección ahí.</p></div>
+      <a class="btn" href="https://portalgrandbar.com/deposito.html">Ir al Depósito del Portal</a>`;
+  } else {
+    c.innerHTML = `<div class="card"><h1>Encontramos tu conteo en curso</h1>
+      ${sectores.map(s => `<p><span class="n">${Object.keys(borradores[s].values).length}</span> productos cargados de <b>${LBL[s]}</b>${seleccion && seleccion.sector === s && seleccion.proveedores ? ' · ' + seleccion.proveedores.length + ' proveedor' + (seleccion.proveedores.length === 1 ? '' : 'es') : ''}</p>`).join('')}
+      <p>La app de stock ahora está en el Portal GrandBar. Tocá el botón y seguís desde donde quedaste (te va a pedir que entres con tu usuario).</p></div>
+      <button class="btn" id="pasar" type="button">Pasar el conteo al Portal</button>`;
+    document.getElementById('pasar').onclick = () => {
+      const datos = { v: 1, borradores, seleccion: seleccion || null };
+      location.href = 'https://portalgrandbar.com/deposito.html#recuperar=' + encodeURIComponent(JSON.stringify(datos));
+    };
+  }
+</script>
+</body>
+</html>
