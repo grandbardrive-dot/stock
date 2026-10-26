@@ -1,13 +1,16 @@
+# ============================================================
+#  26/10/2026: APAGADA. La app de stock se mudó al Portal GrandBar
+#  (portalgrandbar.com/deposito.html y deposito-admin.html, función stock;
+#  el stock de Córdoba lo trae el Portal cada hora).
+#  Este sitio ya no tiene funciones ni tarea programada: cualquier dirección
+#  lleva al Depósito del Portal. Para volver a prenderla, revertir este commit.
+# ============================================================
 [build]
   publish   = "."
-  functions = "netlify/functions"
+  functions = "netlify/sin-funciones"
 
-[functions]
-  node_bundler = "esbuild"
-
-# Stock de Córdoba → stock_sistema cada hora, de 8 a 20 hs de Argentina (11 a 23 UTC),
-# de lunes a sábado. La tarea solo dispara sync-stock-background (ver el archivo).
-[functions."sync-stock-cron"]
-  schedule = "0 11-23 * * 1-6"
-
-# Sin redirects especiales — archivos estáticos se sirven directo
+[[redirects]]
+  from   = "/*"
+  to     = "https://portalgrandbar.com/deposito.html"
+  status = 301
+  force  = true
